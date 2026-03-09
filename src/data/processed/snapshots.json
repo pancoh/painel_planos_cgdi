@@ -1,0 +1,74 @@
+[
+  {
+    "file_name": "Levantamento_PlanosdeMobilidadeUrbana_20fev2025.xlsx",
+    "reference_date": "2025-02-20",
+    "reference_label": "20 de fev de 2025",
+    "municipality_count": 5570
+  },
+  {
+    "file_name": "Levantamento_PlanosdeMobilidadeUrbana_01abr2025.xlsx",
+    "reference_date": "2025-04-01",
+    "reference_label": "01 de abr de 2025",
+    "municipality_count": 5570
+  },
+  {
+    "file_name": "Levantamento_PlanosdeMobilidadeUrbana_16abr2025.xlsx",
+    "reference_date": "2025-04-16",
+    "reference_label": "16 de abr de 2025",
+    "municipality_count": 5570
+  },
+  {
+    "file_name": "Levantamento_PlanosdeMobilidadeUrbana_30abr2025.xlsx",
+    "reference_date": "2025-04-30",
+    "reference_label": "30 de abr de 2025",
+    "municipality_count": 5570
+  },
+  {
+    "file_name": "Levantamento_PlanosdeMobilidadeUrbana_22mai2025.xlsx",
+    "reference_date": "2025-05-22",
+    "reference_label": "22 de mai de 2025",
+    "municipality_count": 5570
+  },
+  {
+    "file_name": "Levantamento_PlanosdeMobilidadeUrbana_25jun2025.xlsx",
+    "reference_date": "2025-06-25",
+    "reference_label": "25 de jun de 2025",
+    "municipality_count": 5570
+  },
+  {
+    "file_name": "Levantamento_PlanosdeMobilidadeUrbana_01jul2025.xlsx",
+    "reference_date": "2025-07-01",
+    "reference_label": "01 de jul de 2025",
+    "municipality_count": 5570
+  },
+  {
+    "file_name": "Levantamento_PlanosdeMobilidadeUrbana_5ago2025.xlsx",
+    "reference_date": "2025-08-05",
+    "reference_label": "05 de ago de 2025",
+    "municipality_count": 5570
+  },
+  {
+    "file_name": "Levantamento_PlanosdeMobilidadeUrbana_01out2025.xlsx",
+    "reference_date": "2025-10-01",
+    "reference_label": "01 de out de 2025",
+    "municipality_count": 5570
+  },
+  {
+    "file_name": "Levantamento_PlanosdeMobilidadeUrbana_31out2025.xlsx",
+    "reference_date": "2025-10-31",
+    "reference_label": "31 de out de 2025",
+    "municipality_count": 5570
+  },
+  {
+    "file_name": "Levantamento_PlanosdeMobilidadeUrbana_6jan2026.xlsx",
+    "reference_date": "2026-01-06",
+    "reference_label": "06 de jan de 2026",
+    "municipality_count": 5571
+  },
+  {
+    "file_name": "Levantamento_PlanosdeMobilidadeUrbana_6fev2026.xlsx",
+    "reference_date": "2026-02-06",
+    "reference_label": "06 de fev de 2026",
+    "municipality_count": 5571
+  }
+]

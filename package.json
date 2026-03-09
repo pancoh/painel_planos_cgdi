@@ -1,0 +1,29 @@
+{
+  "name": "painel-planos-cgdi",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "clean": "rimraf dist src/.observablehq/cache",
+    "data": "node scripts/process-historical-data.mjs && node scripts/generate-state-pages.mjs",
+    "predev": "npm run data",
+    "dev": "observable preview",
+    "prebuild": "npm run data",
+    "build": "observable build",
+    "observable": "observable"
+  },
+  "dependencies": {
+    "@observablehq/framework": "^1.13.4",
+    "@observablehq/plot": "^0.6.17",
+    "@svg-maps/brazil": "^2.0.0",
+    "d3": "^7.9.0",
+    "d3-dsv": "^3.0.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "rimraf": "^6.0.1",
+    "topojson-client": "^3.1.0",
+    "xlsx": "^0.18.5"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
