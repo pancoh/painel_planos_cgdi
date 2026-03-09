@@ -39,3 +39,4 @@ O processamento histórico está em [`scripts/process-historical-data.mjs`](/Use
 ## Publicação
 
 O site gerado em `dist/` pode ser publicado em qualquer hospedagem estática. Para uso no portal gov.br, a opção mais simples é publicar o build estático em um subdomínio institucional ou CDN e embutir o painel via `iframe` responsivo no portal.
+# painel_planos_cgdi
