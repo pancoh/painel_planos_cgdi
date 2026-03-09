@@ -1,4 +1,4 @@
-# Painel de Planos de Mobilidade Urbana - Novo
+# Painel de Planos de Mobilidade Urbana
 
 Painel web institucional construído com Observable Framework para substituir um painel antigo em Power BI sobre a situação dos Planos de Mobilidade Urbana no Brasil.
 
