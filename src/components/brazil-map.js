@@ -33,7 +33,7 @@ export function brazilCoverageMap(rows) {
   for (const location of brazil.locations) {
     const data = values.get(location.id);
     const link = document.createElementNS(ns, "a");
-    link.setAttribute("href", `/estado/${location.id}`);
+    link.setAttribute("href", `estado/${location.id}`);
 
     const path = document.createElementNS(ns, "path");
     path.setAttribute("d", location.path);

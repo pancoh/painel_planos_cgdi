@@ -54,7 +54,7 @@ function renderStateTable(rows) {
     .map(
       (row) => `
         <tr>
-          <td><a href="/estado/${row.uf.toLowerCase()}">${row.estado_nome}</a></td>
+          <td><a href="estado/${row.uf.toLowerCase()}">${row.estado_nome}</a></td>
           <td>${row.uf}</td>
           <td>${formatNumber(row.total_obrigados)}</td>
           <td>${formatNumber(row.municipios_com_plano_aprovado)}</td>
