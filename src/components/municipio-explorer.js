@@ -1,4 +1,4 @@
-import {formatNumber, csvEscape} from "../lib/formatters.js";
+import { formatNumber, csvEscape } from "../lib/formatters.js";
 
 export function createMunicipioExplorer(rows, options = {}) {
   const {
@@ -9,7 +9,7 @@ export function createMunicipioExplorer(rows, options = {}) {
     defaultObrigatoriedade = "Todos",
     showUfFilter = true,
     showRegionFilter = true,
-    allowSearch = true
+    allowSearch = true,
   } = options;
 
   const state = {
@@ -18,7 +18,7 @@ export function createMunicipioExplorer(rows, options = {}) {
     regiao: defaultRegion,
     status: defaultStatus,
     obrigatoriedade: defaultObrigatoriedade,
-    porte: "Todos"
+    porte: "Todos",
   };
 
   const root = document.createElement("section");
@@ -42,12 +42,60 @@ export function createMunicipioExplorer(rows, options = {}) {
   download.textContent = "Exportar CSV";
   download.download = "municipios-filtrados.csv";
 
-  if (allowSearch) controls.append(control("Buscar município", textInput(state, "search", update, "Digite o nome ou código IBGE")));
-  if (showRegionFilter) controls.append(control("Região", selectInput(unique(rows, "regiao", "Todas"), state, "regiao", update)));
-  if (showUfFilter) controls.append(control("UF", selectInput(unique(rows, "uf", "Todos"), state, "uf", update)));
-  controls.append(control("Obrigatoriedade", selectInput(["Todos", "Obrigatório", "Não obrigatório"], state, "obrigatoriedade", update)));
-  controls.append(control("Status", selectInput(["Todos", ...unique(rows, "status_painel")], state, "status", update)));
-  controls.append(control("Porte populacional", selectInput(["Todos", ...unique(rows, "porte_populacional")], state, "porte", update)));
+  if (allowSearch)
+    controls.append(
+      control(
+        "Buscar município",
+        textInput(state, "search", update, "Digite o nome ou código IBGE"),
+      ),
+    );
+  if (showRegionFilter)
+    controls.append(
+      control(
+        "Região",
+        selectInput(unique(rows, "regiao", "Todas"), state, "regiao", update),
+      ),
+    );
+  if (showUfFilter)
+    controls.append(
+      control(
+        "UF",
+        selectInput(unique(rows, "uf", "Todos"), state, "uf", update),
+      ),
+    );
+  controls.append(
+    control(
+      "Obrigatoriedade",
+      selectInput(
+        ["Todos", "Obrigatório", "Não obrigatório"],
+        state,
+        "obrigatoriedade",
+        update,
+      ),
+    ),
+  );
+  controls.append(
+    control(
+      "Status",
+      selectInput(
+        ["Todos", ...unique(rows, "status_painel")],
+        state,
+        "status",
+        update,
+      ),
+    ),
+  );
+  controls.append(
+    control(
+      "Porte populacional",
+      selectInput(
+        ["Todos", ...unique(rows, "porte_populacional")],
+        state,
+        "porte",
+        update,
+      ),
+    ),
+  );
   controls.append(download);
 
   root.append(heading, controls, stats, tableWrap);
@@ -59,14 +107,18 @@ export function createMunicipioExplorer(rows, options = {}) {
       const search = state.search.trim().toLowerCase();
       if (
         search &&
-        !`${row.municipio} ${row.codigo_ibge} ${row.uf}`.toLowerCase().includes(search)
+        !`${row.municipio} ${row.codigo_ibge} ${row.uf}`
+          .toLowerCase()
+          .includes(search)
       ) {
         return false;
       }
       if (state.regiao !== "Todas" && row.regiao !== state.regiao) return false;
       if (state.uf !== "Todos" && row.uf !== state.uf) return false;
-      if (state.status !== "Todos" && row.status_painel !== state.status) return false;
-      if (state.porte !== "Todos" && row.porte_populacional !== state.porte) return false;
+      if (state.status !== "Todos" && row.status_painel !== state.status)
+        return false;
+      if (state.porte !== "Todos" && row.porte_populacional !== state.porte)
+        return false;
       if (state.obrigatoriedade !== "Todos") {
         const label = row.obrigado ? "Obrigatório" : "Não obrigatório";
         if (label !== state.obrigatoriedade) return false;
@@ -93,11 +145,15 @@ function updateDownload(anchor, rows) {
     "possui_plano_mobilidade",
     "aprovado_lei",
     "elaborando_plano",
-    "reference_date"
+    "reference_date",
   ];
   const header = columns.join(",");
-  const body = rows.map((row) => columns.map((column) => csvEscape(row[column])).join(",")).join("\n");
-  const blob = new Blob([`${header}\n${body}\n`], {type: "text/csv;charset=utf-8"});
+  const body = rows
+    .map((row) => columns.map((column) => csvEscape(row[column])).join(","))
+    .join("\n");
+  const blob = new Blob([`\uFEFF${header}\n${body}\n`], {
+    type: "text/csv;charset=utf-8",
+  });
   anchor.href = URL.createObjectURL(blob);
 }
 
@@ -179,7 +235,9 @@ function textInput(state, key, onChange, placeholder) {
 }
 
 function unique(rows, key, fallback) {
-  const values = [...new Set(rows.map((row) => row[key]).filter(Boolean))].sort((a, b) => a.localeCompare(b, "pt-BR"));
+  const values = [...new Set(rows.map((row) => row[key]).filter(Boolean))].sort(
+    (a, b) => a.localeCompare(b, "pt-BR"),
+  );
   return fallback ? [fallback, ...values] : values;
 }
 

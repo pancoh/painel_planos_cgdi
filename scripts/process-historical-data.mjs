@@ -3,7 +3,10 @@ import path from "node:path";
 import xlsx from "xlsx";
 
 const ROOT = process.cwd();
-const INPUT_DIR = path.join(ROOT, "Arquivos_Levantamento_PlanosdeMobilidadeUrbana");
+const INPUT_DIR = path.join(
+  ROOT,
+  "Arquivos_Levantamento_PlanosdeMobilidadeUrbana",
+);
 const OUTPUT_DIR = path.join(ROOT, "src", "data", "processed");
 
 const MONTHS = {
@@ -18,7 +21,7 @@ const MONTHS = {
   set: 9,
   out: 10,
   nov: 11,
-  dez: 12
+  dez: 12,
 };
 
 const REGION_ORDER = ["Norte", "Nordeste", "Centro-Oeste", "Sudeste", "Sul"];
@@ -27,7 +30,7 @@ const REGION_LABELS = {
   NE: "Nordeste",
   CO: "Centro-Oeste",
   SE: "Sudeste",
-  S: "Sul"
+  S: "Sul",
 };
 
 const STATE_NAMES = {
@@ -57,7 +60,7 @@ const STATE_NAMES = {
   SC: "Santa Catarina",
   SE: "Sergipe",
   SP: "São Paulo",
-  TO: "Tocantins"
+  TO: "Tocantins",
 };
 
 const COLUMN_ALIASES = new Map(
@@ -95,17 +98,17 @@ const COLUMN_ALIASES = new Map(
     enmu: "enmu",
     mapa_do_turismo_brasileiro_2022: "mapa_turismo_2022",
     mapa_do_turismo_brasileiro_2024: "mapa_turismo_2024",
-    tipologia_pndu: "tipologia_pndu"
-  })
+    tipologia_pndu: "tipologia_pndu",
+  }),
 );
 
 async function main() {
-  await fs.mkdir(OUTPUT_DIR, {recursive: true});
+  await fs.mkdir(OUTPUT_DIR, { recursive: true });
   const files = (await fs.readdir(INPUT_DIR))
     .filter((file) => file.endsWith(".xlsx"))
     .map((file) => ({
       file,
-      ...parseReferenceDate(file)
+      ...parseReferenceDate(file),
     }))
     .sort((a, b) => a.reference_date.localeCompare(b.reference_date));
 
@@ -113,39 +116,49 @@ async function main() {
   const snapshots = [];
 
   for (const fileInfo of files) {
-    const workbook = xlsx.readFile(path.join(INPUT_DIR, fileInfo.file), {cellDates: true});
+    const workbook = xlsx.readFile(path.join(INPUT_DIR, fileInfo.file), {
+      cellDates: true,
+    });
     const sheet = workbook.Sheets["Levantamento"];
     if (!sheet) continue;
 
-    const rawRows = xlsx.utils.sheet_to_json(sheet, {defval: null, raw: false});
+    const rawRows = xlsx.utils.sheet_to_json(sheet, {
+      defval: null,
+      raw: false,
+    });
     const rows = rawRows.map((row) => normalizeRow(row, fileInfo));
     historyRows.push(...rows);
     snapshots.push({
       file_name: fileInfo.file,
       reference_date: fileInfo.reference_date,
       reference_label: fileInfo.reference_label,
-      municipality_count: rows.length
+      municipality_count: rows.length,
     });
   }
 
   const latestDate = snapshots.at(-1)?.reference_date;
-  const latestRows = historyRows.filter((row) => row.reference_date === latestDate);
+  const latestRows = historyRows.filter(
+    (row) => row.reference_date === latestDate,
+  );
 
   const brazilSeries = buildTimeSeries(historyRows, ["reference_date"]);
-  const regionSeries = buildTimeSeries(historyRows, ["reference_date", "regiao"]);
+  const regionSeries = buildTimeSeries(historyRows, [
+    "reference_date",
+    "regiao",
+  ]);
   const ufSeries = buildTimeSeries(historyRows, ["reference_date", "uf"]);
   const latestRegions = summarizeGroups(latestRows, "regiao");
   const latestStates = summarizeGroups(latestRows, "uf");
   const latestMunicipios = latestRows.map((row) => ({
     ...row,
-    obrigatoriedade_label: row.obrigado ? "Obrigatório" : "Não obrigatório"
+    obrigatoriedade_label: row.obrigado ? "Obrigatório" : "Não obrigatório",
   }));
   const metadata = buildMetadata({
     snapshots,
     latestRows,
     historyRows,
     latestRegions,
-    latestStates
+    latestStates,
   });
 
   await writeJson("metadata.json", metadata);
@@ -163,17 +176,23 @@ async function main() {
 function parseReferenceDate(fileName) {
   const match = fileName.match(/_(\d{1,2})([a-z]{3})(\d{4})\.xlsx$/i);
   if (!match) {
-    throw new Error(`Nao foi possivel extrair a data de referencia de ${fileName}`);
+    throw new Error(
+      `Nao foi possivel extrair a data de referencia de ${fileName}`,
+    );
   }
   const [, dayRaw, monthRaw, yearRaw] = match;
   const day = Number(dayRaw);
   const month = MONTHS[monthRaw.toLowerCase()];
   const year = Number(yearRaw);
   const reference_date = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-  const reference_label = new Intl.DateTimeFormat("pt-BR", {day: "2-digit", month: "short", year: "numeric"})
+  const reference_label = new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  })
     .format(new Date(`${reference_date}T12:00:00Z`))
     .replace(".", "");
-  return {reference_date, reference_label};
+  return { reference_date, reference_label };
 }
 
 function normalizeRow(rawRow, fileInfo) {
@@ -191,7 +210,10 @@ function normalizeRow(rawRow, fileInfo) {
   const elaborando = classifyElaborationField(canonical.elaborando_plano);
   const resposta = classifyResponseField(canonical.respondeu_ao_levantamento);
   const obrigado = classifyObligation(canonical);
-  const regiao = REGION_LABELS[String(canonical.regiao || "").toUpperCase()] ?? canonical.regiao ?? null;
+  const regiao =
+    REGION_LABELS[String(canonical.regiao || "").toUpperCase()] ??
+    canonical.regiao ??
+    null;
   const uf = String(canonical.uf || "").toUpperCase() || null;
   const codigo = padIbge(canonical.codigo_ibge);
 
@@ -200,7 +222,8 @@ function normalizeRow(rawRow, fileInfo) {
     reference_date: fileInfo.reference_date,
     reference_label: fileInfo.reference_label,
     codigo_ibge: codigo,
-    municipio_id: codigo ?? `${uf}-${slugify(canonical.municipio ?? "sem-codigo")}`,
+    municipio_id:
+      codigo ?? `${uf}-${slugify(canonical.municipio ?? "sem-codigo")}`,
     regiao,
     uf,
     estado_nome: STATE_NAMES[uf] ?? null,
@@ -211,7 +234,9 @@ function normalizeRow(rawRow, fileInfo) {
     estimativa_ano: inferEstimateYear(rawRow),
     faixa_populacional_2010: cleanText(canonical.faixa_populacional_2010),
     faixa_populacional_2022: cleanText(canonical.faixa_populacional_2022),
-    faixa_populacional_estimativa: cleanText(canonical.faixa_populacional_estimativa),
+    faixa_populacional_estimativa: cleanText(
+      canonical.faixa_populacional_estimativa,
+    ),
     respondeu_ao_levantamento: resposta,
     possui_plano_mobilidade: possuiPlano,
     aprovado_lei: aprovado,
@@ -223,13 +248,17 @@ function normalizeRow(rawRow, fileInfo) {
     fonte_resposta: cleanText(canonical.fonte_resposta),
     instrumento_resposta: cleanText(canonical.instrumento_resposta),
     obrigados_estimativa: classifyYesNoField(canonical.obrigados_estimativa),
-    obrigados_censo_2022_antigo: classifyYesNoField(canonical.obrigados_censo_2022_antigo),
-    obrigados_censo_2022_atualizado: classifyYesNoField(canonical.obrigados_censo_2022_atualizado),
+    obrigados_censo_2022_antigo: classifyYesNoField(
+      canonical.obrigados_censo_2022_antigo,
+    ),
+    obrigados_censo_2022_atualizado: classifyYesNoField(
+      canonical.obrigados_censo_2022_atualizado,
+    ),
     recorte_metropolitano: cleanText(canonical.recorte_metropolitano),
     enmu: classifyYesNoField(canonical.enmu),
     mapa_turismo_2022: cleanText(canonical.mapa_turismo_2022),
     mapa_turismo_2024: cleanText(canonical.mapa_turismo_2024),
-    tipologia_pndu: cleanText(canonical.tipologia_pndu)
+    tipologia_pndu: cleanText(canonical.tipologia_pndu),
   };
 
   row.obrigado = obrigado;
@@ -237,9 +266,15 @@ function normalizeRow(rawRow, fileInfo) {
     row.faixa_populacional_estimativa ||
     row.faixa_populacional_2022 ||
     row.faixa_populacional_2010 ||
-    classifyPopulationBand(row.estimativa_populacional ?? row.populacao_censo_2022 ?? row.populacao_censo_2010);
+    classifyPopulationBand(
+      row.estimativa_populacional ??
+        row.populacao_censo_2022 ??
+        row.populacao_censo_2010,
+    );
   row.status_painel = deriveStatus(row);
-  row.cobertura_municipio = ["Plano aprovado", "Possui plano"].includes(row.status_painel);
+  row.cobertura_municipio = ["Plano aprovado", "Possui plano"].includes(
+    row.status_painel,
+  );
   return row;
 }
 
@@ -292,7 +327,14 @@ function classifyYesNoField(value) {
   const key = slugify(value);
   if (!key) return null;
   if (["sim", "s"].includes(key)) return "Sim";
-  if (["nao", "nao_possui_plano", "nao_respondeu", "nao_foi_enviado_oficio"].includes(key)) {
+  if (
+    [
+      "nao",
+      "nao_possui_plano",
+      "nao_respondeu",
+      "nao_foi_enviado_oficio",
+    ].includes(key)
+  ) {
     if (key === "nao_respondeu") return "Não respondeu";
     if (key === "nao_foi_enviado_oficio") return "Não foi enviado ofício";
     if (key === "nao_possui_plano") return "Não possui plano";
@@ -321,15 +363,19 @@ function classifyElaborationField(value) {
 }
 
 function classifyObligation(canonical) {
-  return classifyYesNoField(canonical.obrigados_censo_2022_atualizado) === "Sim";
+  return (
+    classifyYesNoField(canonical.obrigados_censo_2022_atualizado) === "Sim"
+  );
 }
 
 function deriveStatus(row) {
-  if (row.respondeu_ao_levantamento === "Não foi enviado ofício") return "Sem ofício";
+  if (row.respondeu_ao_levantamento === "Não foi enviado ofício")
+    return "Sem ofício";
   if (row.respondeu_ao_levantamento !== "Respondeu") return "Sem resposta";
   if (row.aprovado_lei === "Sim") return "Plano aprovado";
   if (row.possui_plano_mobilidade === "Sim") return "Possui plano";
-  if (row.elaborando_plano === "Sim" || row.elaborando_plano === "Em revisão") return "Em elaboração";
+  if (row.elaborando_plano === "Sim" || row.elaborando_plano === "Em revisão")
+    return "Em elaboração";
   return "Sem plano";
 }
 
@@ -355,14 +401,30 @@ function summarize(rows) {
   const totalMunicipios = rows.length;
   const obligatedRows = rows.filter((row) => row.obrigado);
   const obrigados = obligatedRows.length;
-  const comPlano = obligatedRows.filter((row) => ["Plano aprovado", "Possui plano"].includes(row.status_painel)).length;
-  const planoAprovado = obligatedRows.filter((row) => row.status_painel === "Plano aprovado").length;
-  const emElaboracao = obligatedRows.filter((row) => row.status_painel === "Em elaboração").length;
-  const semResposta = obligatedRows.filter((row) => row.status_painel === "Sem resposta").length;
-  const semOficio = obligatedRows.filter((row) => row.status_painel === "Sem ofício").length;
-  const semPlano = obligatedRows.filter((row) => row.status_painel === "Sem plano").length;
-  const responderam = rows.filter((row) => row.respondeu_ao_levantamento === "Respondeu").length;
-  const responderamObrigados = obligatedRows.filter((row) => row.respondeu_ao_levantamento === "Respondeu").length;
+  const comPlano = obligatedRows.filter((row) =>
+    ["Plano aprovado", "Possui plano"].includes(row.status_painel),
+  ).length;
+  const planoAprovado = obligatedRows.filter(
+    (row) => row.status_painel === "Plano aprovado",
+  ).length;
+  const emElaboracao = obligatedRows.filter(
+    (row) => row.status_painel === "Em elaboração",
+  ).length;
+  const semResposta = obligatedRows.filter(
+    (row) => row.status_painel === "Sem resposta",
+  ).length;
+  const semOficio = obligatedRows.filter(
+    (row) => row.status_painel === "Sem ofício",
+  ).length;
+  const semPlano = obligatedRows.filter(
+    (row) => row.status_painel === "Sem plano",
+  ).length;
+  const responderam = rows.filter(
+    (row) => row.respondeu_ao_levantamento === "Respondeu",
+  ).length;
+  const responderamObrigados = obligatedRows.filter(
+    (row) => row.respondeu_ao_levantamento === "Respondeu",
+  ).length;
   return {
     total_municipios: totalMunicipios,
     total_obrigados: obrigados,
@@ -376,7 +438,7 @@ function summarize(rows) {
     municipios_obrigados_que_responderam: responderamObrigados,
     percentual_cobertura: obrigados ? comPlano / obrigados : 0,
     percentual_aprovado: obrigados ? planoAprovado / obrigados : 0,
-    percentual_resposta: obrigados ? responderamObrigados / obrigados : 0
+    percentual_resposta: obrigados ? responderamObrigados / obrigados : 0,
   };
 }
 
@@ -389,11 +451,13 @@ function summarizeGroups(rows, key) {
   }
   const summary = Array.from(groups, ([value, groupRows]) => ({
     [key]: value,
-    ...(key === "uf" ? {regiao: groupRows[0].regiao} : {}),
-    ...summarize(groupRows)
+    ...(key === "uf" ? { regiao: groupRows[0].regiao } : {}),
+    ...summarize(groupRows),
   }));
   if (key === "regiao") {
-    summary.sort((a, b) => REGION_ORDER.indexOf(a.regiao) - REGION_ORDER.indexOf(b.regiao));
+    summary.sort(
+      (a, b) => REGION_ORDER.indexOf(a.regiao) - REGION_ORDER.indexOf(b.regiao),
+    );
   } else {
     summary.sort((a, b) => a.uf.localeCompare(b.uf));
     for (const row of summary) row.estado_nome = STATE_NAMES[row.uf] ?? row.uf;
@@ -410,10 +474,12 @@ function buildTimeSeries(rows, keys) {
   }
   const series = [];
   for (const groupRows of groups.values()) {
-    const base = Object.fromEntries(keys.map((name) => [name, groupRows[0][name]]));
+    const base = Object.fromEntries(
+      keys.map((name) => [name, groupRows[0][name]]),
+    );
     series.push({
       ...base,
-      ...summarize(groupRows)
+      ...summarize(groupRows),
     });
   }
   return series.sort((a, b) => {
@@ -423,11 +489,19 @@ function buildTimeSeries(rows, keys) {
   });
 }
 
-function buildMetadata({snapshots, latestRows, historyRows, latestRegions, latestStates}) {
+function buildMetadata({
+  snapshots,
+  latestRows,
+  historyRows,
+  latestRegions,
+  latestStates,
+}) {
   const latestSummary = summarize(latestRows);
   const previousDate = snapshots.at(-2)?.reference_date;
   const previousSummary = previousDate
-    ? summarize(historyRows.filter((row) => row.reference_date === previousDate))
+    ? summarize(
+        historyRows.filter((row) => row.reference_date === previousDate),
+      )
     : null;
 
   return {
@@ -442,27 +516,47 @@ function buildMetadata({snapshots, latestRows, historyRows, latestRegions, lates
     previous_summary: previousSummary,
     monthly_delta: previousSummary
       ? {
-          municipios_com_plano: latestSummary.municipios_com_plano - previousSummary.municipios_com_plano,
+          municipios_com_plano:
+            latestSummary.municipios_com_plano -
+            previousSummary.municipios_com_plano,
           municipios_com_plano_aprovado:
-            latestSummary.municipios_com_plano_aprovado - previousSummary.municipios_com_plano_aprovado,
+            latestSummary.municipios_com_plano_aprovado -
+            previousSummary.municipios_com_plano_aprovado,
           municipios_em_elaboracao:
-            latestSummary.municipios_em_elaboracao - previousSummary.municipios_em_elaboracao,
-          municipios_sem_resposta: latestSummary.municipios_sem_resposta - previousSummary.municipios_sem_resposta
+            latestSummary.municipios_em_elaboracao -
+            previousSummary.municipios_em_elaboracao,
+          municipios_sem_resposta:
+            latestSummary.municipios_sem_resposta -
+            previousSummary.municipios_sem_resposta,
         }
       : null,
     available_regions: latestRegions.map((row) => row.regiao),
-    available_ufs: latestStates.map((row) => ({uf: row.uf, estado_nome: row.estado_nome})),
-    status_categories: ["Plano aprovado", "Possui plano", "Em elaboração", "Sem plano", "Sem resposta", "Sem ofício"]
+    available_ufs: latestStates.map((row) => ({
+      uf: row.uf,
+      estado_nome: row.estado_nome,
+    })),
+    status_categories: [
+      "Plano aprovado",
+      "Possui plano",
+      "Em elaboração",
+      "Sem plano",
+      "Sem resposta",
+      "Sem ofício",
+    ],
   };
 }
 
 async function writeJson(fileName, data) {
-  await fs.writeFile(path.join(OUTPUT_DIR, fileName), `${JSON.stringify(data, null, 2)}\n`, "utf8");
+  await fs.writeFile(
+    path.join(OUTPUT_DIR, fileName),
+    `${JSON.stringify(data, null, 2)}\n`,
+    "utf8",
+  );
 }
 
 async function writeCsv(fileName, rows) {
   const csv = xlsx.utils.sheet_to_csv(xlsx.utils.json_to_sheet(rows));
-  await fs.writeFile(path.join(OUTPUT_DIR, fileName), csv, "utf8");
+  await fs.writeFile(path.join(OUTPUT_DIR, fileName), `\uFEFF${csv}`, "utf8");
 }
 
 main().catch((error) => {
