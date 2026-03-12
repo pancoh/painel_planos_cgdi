@@ -190,5 +190,21 @@
     "percentual_cobertura": 0.2418848167539267,
     "percentual_aprovado": 0.2031413612565445,
     "percentual_resposta": 0.7544502617801047
+  },
+  {
+    "reference_date": "2026-03-11",
+    "total_municipios": 5571,
+    "total_obrigados": 1910,
+    "municipios_com_plano": 463,
+    "municipios_com_plano_aprovado": 389,
+    "municipios_em_elaboracao": 360,
+    "municipios_sem_plano": 618,
+    "municipios_sem_resposta": 448,
+    "municipios_sem_oficio": 21,
+    "municipios_que_responderam": 2340,
+    "municipios_obrigados_que_responderam": 1441,
+    "percentual_cobertura": 0.2424083769633508,
+    "percentual_aprovado": 0.2036649214659686,
+    "percentual_resposta": 0.7544502617801047
   }
 ]

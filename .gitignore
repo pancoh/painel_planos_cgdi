@@ -1,5 +1,7 @@
 node_modules/
 dist/
+src/.observablehq/
+planos_mobilidade/
 .DS_Store
 *.DS_Store
 .env

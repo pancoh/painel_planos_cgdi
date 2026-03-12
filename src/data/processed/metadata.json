@@ -1,12 +1,27 @@
 {
   "title": "Painel de Planos de Mobilidade Urbana",
   "source_directory": "Arquivos_Levantamento_PlanosdeMobilidadeUrbana",
-  "generated_at": "2026-03-09T18:50:55.823Z",
-  "last_reference_date": "2026-02-06",
-  "last_reference_label": "06 de fev de 2026",
-  "total_snapshots": 12,
-  "total_historical_rows": 66842,
+  "generated_at": "2026-03-12T21:58:36.282Z",
+  "last_reference_date": "2026-03-11",
+  "last_reference_label": "11 de mar de 2026",
+  "total_snapshots": 13,
+  "total_historical_rows": 72413,
   "latest_summary": {
+    "total_municipios": 5571,
+    "total_obrigados": 1910,
+    "municipios_com_plano": 463,
+    "municipios_com_plano_aprovado": 389,
+    "municipios_em_elaboracao": 360,
+    "municipios_sem_plano": 618,
+    "municipios_sem_resposta": 448,
+    "municipios_sem_oficio": 21,
+    "municipios_que_responderam": 2340,
+    "municipios_obrigados_que_responderam": 1441,
+    "percentual_cobertura": 0.2424083769633508,
+    "percentual_aprovado": 0.2036649214659686,
+    "percentual_resposta": 0.7544502617801047
+  },
+  "previous_summary": {
     "total_municipios": 5571,
     "total_obrigados": 1910,
     "municipios_com_plano": 462,
@@ -21,25 +36,10 @@
     "percentual_aprovado": 0.2031413612565445,
     "percentual_resposta": 0.7544502617801047
   },
-  "previous_summary": {
-    "total_municipios": 5571,
-    "total_obrigados": 1910,
-    "municipios_com_plano": 460,
-    "municipios_com_plano_aprovado": 386,
-    "municipios_em_elaboracao": 361,
-    "municipios_sem_plano": 620,
-    "municipios_sem_resposta": 448,
-    "municipios_sem_oficio": 21,
-    "municipios_que_responderam": 2340,
-    "municipios_obrigados_que_responderam": 1441,
-    "percentual_cobertura": 0.24083769633507854,
-    "percentual_aprovado": 0.20209424083769634,
-    "percentual_resposta": 0.7544502617801047
-  },
   "monthly_delta": {
-    "municipios_com_plano": 2,
-    "municipios_com_plano_aprovado": 2,
-    "municipios_em_elaboracao": -1,
+    "municipios_com_plano": 1,
+    "municipios_com_plano_aprovado": 1,
+    "municipios_em_elaboracao": 0,
     "municipios_sem_resposta": 0
   },
   "available_regions": [

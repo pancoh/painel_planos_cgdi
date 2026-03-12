@@ -70,5 +70,11 @@
     "reference_date": "2026-02-06",
     "reference_label": "06 de fev de 2026",
     "municipality_count": 5571
+  },
+  {
+    "file_name": "Levantamento_PlanosdeMobilidadeUrbana_11mar2026.xlsx",
+    "reference_date": "2026-03-11",
+    "reference_label": "11 de mar de 2026",
+    "municipality_count": 5571
   }
 ]

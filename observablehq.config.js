@@ -9,10 +9,10 @@ export default {
   search: true,
   globalStylesheets: [],
   pages: [
-    {name: "Brasil", path: "/"},
-    {name: "Regiões", path: "/regioes"},
-    {name: "Estados", path: "/estados"},
-    {name: "Municípios", path: "/municipios"}
+    { name: "Brasil", path: "/" },
+    { name: "Regiões", path: "/regioes" },
+    { name: "Estados", path: "/estados" },
+    { name: "Municípios", path: "/municipios" },
   ],
   head: `
     <link rel="icon" href="/observable.png" type="image/png" sizes="32x32">
@@ -22,8 +22,13 @@ export default {
     <div class="site-shell">
       <div class="site-topbar">
         <div class="brand-lockup">
-          <span class="brand-kicker">Ministério das Cidades</span>
-          <a class="brand-title" href="/">Planos de Mobilidade Urbana</a>
+          <a class="brand-home" href="/" aria-label="Página inicial do Painel de Planos de Mobilidade Urbana">
+            <img class="brand-logo" src="/logos/logo_mcid.png" alt="Logo do Ministério das Cidades">
+            <div class="brand-text">
+              <span class="brand-kicker">Ministério das Cidades</span>
+              <span class="brand-title">Planos de Mobilidade Urbana</span>
+            </div>
+          </a>
         </div>
         <nav class="site-nav" aria-label="Navegação principal">
           <a href="/">Brasil</a>
@@ -39,5 +44,5 @@ export default {
       <p>Painel para acompanhamento da situação dos Planos de Mobilidade Urbana no Brasil.</p>
       <p>Fonte: Secretaria Nacional de Moblidade Urbana</p>
     </div>
-  `
+  `,
 };

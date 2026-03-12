@@ -141,5 +141,9 @@ const dashboardLayout = html`<section class="dashboard-hero">
     </div>
   </div>
 </section>`;
+
 ```
-${dashboardLayout}
+
+```js
+display(dashboardLayout)
+```
