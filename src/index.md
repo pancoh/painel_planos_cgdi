@@ -99,7 +99,7 @@ const dashboardLayout = html`<section class="dashboard-hero">
   <div class="card panel-card panel-card--summary-strip">
     <div class="section-heading">
       <div>
-        <h2>Resumo nacional</h2>
+        <h2>Resumo Nacional</h2>
         <p>Municípios obrigados a elaborar e aprovar plano, conforme a Lei nº 12.587/2012.</p>
       </div>
     </div>
