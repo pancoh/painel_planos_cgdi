@@ -25,6 +25,12 @@ const MONTHS = {
 };
 
 const REGION_ORDER = ["Norte", "Nordeste", "Centro-Oeste", "Sudeste", "Sul"];
+const CSV_PT_BR_NUMBER_COLUMNS = new Set([
+  "populacao_censo_2010",
+  "populacao_censo_2022",
+  "estimativa_populacional",
+]);
+const CSV_NUMBER_FORMATTER = new Intl.NumberFormat("pt-BR");
 const REGION_LABELS = {
   N: "Norte",
   NE: "Nordeste",
@@ -299,7 +305,23 @@ function cleanText(value) {
 
 function toNumber(value) {
   if (value == null || value === "") return null;
-  const normalized = Number(String(value).replace(/\./g, "").replace(",", "."));
+  const text = String(value).trim();
+  let normalizedText = text;
+
+  // Values like 932,748 in source spreadsheets represent thousands, not decimals.
+  if (/^\d{1,3}(,\d{3})+$/.test(text)) {
+    normalizedText = text.replace(/,/g, "");
+  } else if (/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(text)) {
+    normalizedText = text.replace(/\./g, "").replace(",", ".");
+  } else if (/^\d+,\d+$/.test(text)) {
+    const [, fraction = ""] = text.split(",");
+    normalizedText =
+      fraction.length === 3 ? text.replace(/,/g, "") : text.replace(",", ".");
+  } else {
+    normalizedText = text.replace(/\./g, "").replace(",", ".");
+  }
+
+  const normalized = Number(normalizedText);
   return Number.isFinite(normalized) ? normalized : null;
 }
 
@@ -555,8 +577,33 @@ async function writeJson(fileName, data) {
 }
 
 async function writeCsv(fileName, rows) {
-  const csv = xlsx.utils.sheet_to_csv(xlsx.utils.json_to_sheet(rows));
-  await fs.writeFile(path.join(OUTPUT_DIR, fileName), `\uFEFF${csv}`, "utf8");
+  const columns = Object.keys(rows[0] ?? {});
+  const header = columns.join(",");
+  const body = rows
+    .map((row) =>
+      columns
+        .map((column) => csvEscape(formatCsvValue(column, row[column])))
+        .join(","),
+    )
+    .join("\n");
+  await fs.writeFile(
+    path.join(OUTPUT_DIR, fileName),
+    `\uFEFF${header}\n${body}\n`,
+    "utf8",
+  );
+}
+
+function formatCsvValue(column, value) {
+  if (value == null || value === "") return "";
+  if (CSV_PT_BR_NUMBER_COLUMNS.has(column) && Number.isFinite(Number(value))) {
+    return CSV_NUMBER_FORMATTER.format(Number(value));
+  }
+  return String(value);
+}
+
+function csvEscape(value) {
+  const text = String(value ?? "");
+  return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 }
 
 main().catch((error) => {
