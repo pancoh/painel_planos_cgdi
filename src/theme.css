@@ -16,7 +16,7 @@ html {
 }
 
 body {
-    margin: 0;
+    margin: 0 auto;
     background:
         radial-gradient(
             circle at top left,
@@ -77,10 +77,25 @@ body {
 
 #observablehq-header {
     border-bottom: none;
+    position: relative;
+    height: auto;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+    left: auto;
+    right: auto;
+    top: auto;
+    z-index: auto;
+    display: block;
+    margin: 0;
+}
+
+#observablehq-header ~ #observablehq-main {
+    margin-top: 0;
 }
 
 .site-shell {
-    width: 100%;
+    width: var(--layout-width);
     margin: 0 auto;
 }
 
@@ -1297,7 +1312,8 @@ body {
 }
 
 .site-shell {
-    width: 100%;
+    width: var(--layout-width);
+    margin: 0 auto;
 }
 
 .site-topbar {
