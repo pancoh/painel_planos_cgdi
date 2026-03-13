@@ -977,6 +977,24 @@ body {
     overflow: hidden;
 }
 
+.map-back-btn {
+    display: inline-flex;
+    align-items: center;
+    margin-bottom: 0.6rem;
+    font-size: 0.88rem;
+}
+
+.map-loading {
+    margin-top: 0.5rem;
+    padding: 0.55rem 0.9rem;
+    border-radius: 999px;
+    background: rgba(15, 118, 110, 0.08);
+    color: var(--theme-foreground-focus);
+    font-size: 0.84rem;
+    font-weight: 600;
+    display: inline-block;
+}
+
 .brazil-map--regional svg {
     background: linear-gradient(
         180deg,

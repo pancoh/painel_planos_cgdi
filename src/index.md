@@ -12,6 +12,9 @@ import {formatDate, formatNumber, formatPercent} from "./lib/formatters.js";
 const metadata = await FileAttachment("data/processed/metadata.json").json();
 const latestRegions = await FileAttachment("data/processed/latest-regioes.json").json();
 const latestStates = await FileAttachment("data/processed/latest-ufs.json").json();
+const estadosGeo = await FileAttachment("geo/estados.json").json();
+const latestMunicipios = await FileAttachment("data/processed/latest-municipios.json").json();
+const municipiosGeo = await FileAttachment("data/municipios-geo.json").json();
 const summary = metadata.latest_summary;
 const previousSummary = metadata.previous_summary;
 const obrigadosSemPlanoAprovado = summary.total_obrigados - summary.municipios_com_plano_aprovado;
@@ -136,7 +139,7 @@ const dashboardLayout = html`<section class="dashboard-hero">
             <p>O mapa destaca, por UF, quantos municípios obrigados pela Lei nº 12.587/2012 já possuem plano aprovado.</p>
           </div>
         </div>
-        ${brazilCoverageMap(latestStates)}
+        ${brazilCoverageMap(latestStates, estadosGeo, latestMunicipios, municipiosGeo)}
       </div>
     </div>
   </div>
