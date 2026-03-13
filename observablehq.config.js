@@ -15,6 +15,9 @@ export default {
     { name: "Municípios", path: "/municipios" },
   ],
   head: `
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@500;600;700&display=swap" rel="stylesheet">
     <link rel="icon" href="/observable.png" type="image/png" sizes="32x32">
     <link rel="stylesheet" href="/theme.css">
   `,
@@ -42,7 +45,7 @@ export default {
   footer: `
     <div class="site-shell footer-shell">
       <p>Painel para acompanhamento da situação dos Planos de Mobilidade Urbana no Brasil.</p>
-      <p>Fonte: Secretaria Nacional de Moblidade Urbana</p>
+      <p>Fonte: Secretaria Nacional de Mobilidade Urbana</p>
     </div>
   `,
 };

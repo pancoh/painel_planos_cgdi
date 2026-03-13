@@ -19,7 +19,9 @@ export function createMunicipioExplorer(rows, options = {}) {
     status: defaultStatus,
     obrigatoriedade: defaultObrigatoriedade,
     porte: "Todos",
+    page: 1,
   };
+  const pageSize = 200;
 
   const root = document.createElement("section");
   root.className = "table-shell";
@@ -33,6 +35,9 @@ export function createMunicipioExplorer(rows, options = {}) {
 
   const stats = document.createElement("div");
   stats.className = "table-meta";
+
+  const pagination = document.createElement("div");
+  pagination.className = "table-pagination";
 
   const tableWrap = document.createElement("div");
   tableWrap.className = "table-wrap";
@@ -98,7 +103,7 @@ export function createMunicipioExplorer(rows, options = {}) {
   );
   controls.append(download);
 
-  root.append(heading, controls, stats, tableWrap);
+  root.append(heading, controls, stats, pagination, tableWrap);
   update();
   return root;
 
@@ -127,8 +132,22 @@ export function createMunicipioExplorer(rows, options = {}) {
     });
 
     filtered.sort((a, b) => a.municipio.localeCompare(b.municipio, "pt-BR"));
-    stats.innerHTML = `<strong>${formatNumber(filtered.length)}</strong> municípios encontrados. Exibindo até 200 linhas na tabela.`;
-    renderTable(tableWrap, filtered.slice(0, 200));
+    const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+    if (state.page > totalPages) state.page = totalPages;
+    const startIndex = filtered.length === 0 ? 0 : (state.page - 1) * pageSize;
+    const endIndex = Math.min(startIndex + pageSize, filtered.length);
+    const startLabel = filtered.length === 0 ? 0 : startIndex + 1;
+    stats.innerHTML = `<strong>${formatNumber(filtered.length)}</strong> municípios encontrados. Exibindo <strong>${formatNumber(startLabel)}</strong> a <strong>${formatNumber(endIndex)}</strong> de <strong>${formatNumber(filtered.length)}</strong>.`;
+    renderPagination(pagination, {
+      totalItems: filtered.length,
+      totalPages,
+      currentPage: state.page,
+      onPageChange: (page) => {
+        state.page = page;
+        update();
+      },
+    });
+    renderTable(tableWrap, filtered.slice(startIndex, endIndex));
     updateDownload(download, filtered);
   }
 }
@@ -217,6 +236,7 @@ function selectInput(options, state, key, onChange) {
   }
   select.addEventListener("change", () => {
     state[key] = select.value;
+    state.page = 1;
     onChange();
   });
   return select;
@@ -229,9 +249,78 @@ function textInput(state, key, onChange, placeholder) {
   input.value = state[key];
   input.addEventListener("input", () => {
     state[key] = input.value;
+    state.page = 1;
     onChange();
   });
   return input;
+}
+
+function renderPagination(
+  container,
+  { totalItems, totalPages, currentPage, onPageChange },
+) {
+  container.innerHTML = "";
+  if (totalItems <= 200) return;
+
+  const summary = document.createElement("div");
+  summary.className = "table-pagination__summary";
+  summary.textContent = `Página ${formatNumber(currentPage)} de ${formatNumber(totalPages)}`;
+
+  const actions = document.createElement("div");
+  actions.className = "table-pagination__actions";
+  actions.append(
+    pageButton("Anterior", currentPage === 1, () =>
+      onPageChange(currentPage - 1),
+    ),
+  );
+
+  for (const page of getVisiblePages(currentPage, totalPages)) {
+    if (page === "...") {
+      const ellipsis = document.createElement("span");
+      ellipsis.className = "table-pagination__ellipsis";
+      ellipsis.textContent = "...";
+      actions.append(ellipsis);
+      continue;
+    }
+    const button = pageButton(String(page), false, () => onPageChange(page));
+    if (page === currentPage) button.dataset.active = "true";
+    actions.append(button);
+  }
+
+  actions.append(
+    pageButton("Próxima", currentPage === totalPages, () =>
+      onPageChange(currentPage + 1),
+    ),
+  );
+
+  container.append(summary, actions);
+}
+
+function pageButton(label, disabled, onClick) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "table-pagination__button";
+  button.textContent = label;
+  button.disabled = disabled;
+  button.addEventListener("click", onClick);
+  return button;
+}
+
+function getVisiblePages(currentPage, totalPages) {
+  if (totalPages <= 7) {
+    return Array.from({ length: totalPages }, (_, index) => index + 1);
+  }
+
+  const pages = [1];
+  const start = Math.max(2, currentPage - 1);
+  const end = Math.min(totalPages - 1, currentPage + 1);
+
+  if (start > 2) pages.push("...");
+  for (let page = start; page <= end; page += 1) pages.push(page);
+  if (end < totalPages - 1) pages.push("...");
+  pages.push(totalPages);
+
+  return pages;
 }
 
 function unique(rows, key, fallback) {
