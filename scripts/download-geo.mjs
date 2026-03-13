@@ -27,21 +27,32 @@ async function fileExists(path) {
   }
 }
 
-async function fetchTopoAndSaveGeo(url, filePath, label) {
+async function fetchTopoAndSaveGeo(url, filePath, label, retries = 2) {
   if (await fileExists(filePath)) {
     console.log(`  ✓ já existe: ${label}`);
     return;
   }
   process.stdout.write(`  ↓ baixando: ${label}...`);
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`HTTP ${res.status} ao buscar ${url}`);
-  const topo = await res.json();
-  // Convert first TopoJSON object to GeoJSON FeatureCollection
-  const key = Object.keys(topo.objects)[0];
-  const geo = topojson.feature(topo, topo.objects[key]);
-  const json = JSON.stringify(geo);
-  await writeFile(filePath, json, "utf-8");
-  console.log(` salvo (${(json.length / 1024).toFixed(0)} KB)`);
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status} ao buscar ${url}`);
+      const topo = await res.json();
+      // Convert first TopoJSON object to GeoJSON FeatureCollection
+      const key = Object.keys(topo.objects)[0];
+      const geo = topojson.feature(topo, topo.objects[key]);
+      const json = JSON.stringify(geo);
+      await writeFile(filePath, json, "utf-8");
+      console.log(` salvo (${(json.length / 1024).toFixed(0)} KB)`);
+      return;
+    } catch (err) {
+      if (attempt < retries) {
+        console.log(` erro (tentativa ${attempt}/${retries}), tentando novamente...`);
+      } else {
+        throw err;
+      }
+    }
+  }
 }
 
 async function main() {
@@ -55,12 +66,15 @@ async function main() {
   );
 
   console.log("\n🏘  Baixando GeoJSON — municípios por estado");
-  for (const code of STATE_CODES) {
-    await fetchTopoAndSaveGeo(
-      `${IBGE_API}/estados/${code}?formato=application/json&qualidade=minima&intrarregiao=municipio`,
-      join(GEO_DIR, `municipios-${code}.json`),
-      `municipios-${code}.json`
-    );
+  const BATCH_SIZE = 5;
+  for (let i = 0; i < STATE_CODES.length; i += BATCH_SIZE) {
+    await Promise.all(STATE_CODES.slice(i, i + BATCH_SIZE).map((code) =>
+      fetchTopoAndSaveGeo(
+        `${IBGE_API}/estados/${code}?formato=application/json&qualidade=minima&intrarregiao=municipio`,
+        join(GEO_DIR, `municipios-${code}.json`),
+        `municipios-${code}.json`
+      )
+    ));
   }
 
   console.log("\n✅  Arquivos GeoJSON prontos em src/geo/\n");

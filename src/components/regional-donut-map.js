@@ -138,15 +138,19 @@ function drawDonut(layer, tooltip, wrapper) {
   caption.textContent = label;
   g.append(caption);
 
+  // Pre-create tooltip nodes once per donut — only swap DOM when donut changes
+  const ttStrong = document.createElement("strong");
+  ttStrong.textContent = label;
+  const ttNodes = [ttStrong, ...[
+    `Obrigados: ${formatNumber(total)}`,
+    `Plano aprovado: ${formatNumber(approved)}`,
+    `Sem plano aprovado: ${formatNumber(pending)}`,
+    `Percentual aprovado: ${formatPercent(percent)}`,
+  ].map(text => { const s = document.createElement("span"); s.textContent = text; return s; })];
+
   g.addEventListener("mousemove", (event) => {
     tooltip.hidden = false;
-    tooltip.innerHTML = `
-      <strong>${label}</strong>
-      <span>Obrigados: ${formatNumber(total)}</span>
-      <span>Plano aprovado: ${formatNumber(approved)}</span>
-      <span>Sem plano aprovado: ${formatNumber(pending)}</span>
-      <span>Percentual aprovado: ${formatPercent(percent)}</span>
-    `;
+    if (tooltip.firstChild !== ttStrong) tooltip.replaceChildren(...ttNodes);
     const bounds = wrapper.getBoundingClientRect();
     tooltip.style.left = `${event.clientX - bounds.left + 18}px`;
     tooltip.style.top = `${event.clientY - bounds.top + 18}px`;

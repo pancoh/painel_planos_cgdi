@@ -51,6 +51,7 @@ const latestStates = await FileAttachment("../data/processed/latest-ufs.json").j
 const latestMunicipios = await FileAttachment("../data/processed/latest-municipios.json").json();
 const state = latestStates.find((row) => row.uf === uf);
 const stateRows = latestMunicipios.filter((row) => row.uf === uf);
+if (!state) throw new Error("Dados não encontrados para " + uf);
 \`\`\`
 
 # \${state.estado_nome}

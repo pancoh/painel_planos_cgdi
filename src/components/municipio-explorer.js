@@ -28,7 +28,13 @@ export function createMunicipioExplorer(rows, options = {}) {
 
   const heading = document.createElement("div");
   heading.className = "section-heading";
-  heading.innerHTML = `<div><h2>${title}</h2><p>Busca, filtros e exportação da visão selecionada.</p></div>`;
+  const headingInner = document.createElement("div");
+  const headingH2 = document.createElement("h2");
+  headingH2.textContent = title;
+  const headingP = document.createElement("p");
+  headingP.textContent = "Busca, filtros e exportação da visão selecionada.";
+  headingInner.append(headingH2, headingP);
+  heading.append(headingInner);
 
   const controls = document.createElement("div");
   controls.className = "table-controls";
@@ -137,7 +143,13 @@ export function createMunicipioExplorer(rows, options = {}) {
     const startIndex = filtered.length === 0 ? 0 : (state.page - 1) * pageSize;
     const endIndex = Math.min(startIndex + pageSize, filtered.length);
     const startLabel = filtered.length === 0 ? 0 : startIndex + 1;
-    stats.innerHTML = `<strong>${formatNumber(filtered.length)}</strong> municípios encontrados. Exibindo <strong>${formatNumber(startLabel)}</strong> a <strong>${formatNumber(endIndex)}</strong> de <strong>${formatNumber(filtered.length)}</strong>.`;
+    const totalEl = document.createElement("strong");
+    totalEl.textContent = formatNumber(filtered.length);
+    const startEl = document.createElement("strong");
+    startEl.textContent = formatNumber(startLabel);
+    const endEl = document.createElement("strong");
+    endEl.textContent = formatNumber(endIndex);
+    stats.replaceChildren(totalEl, " municípios encontrados. Exibindo ", startEl, " a ", endEl, " de ", totalEl.cloneNode(true), ".");
     renderPagination(pagination, {
       totalItems: filtered.length,
       totalPages,
@@ -176,6 +188,14 @@ function updateDownload(anchor, rows) {
   anchor.href = URL.createObjectURL(blob);
 }
 
+function cell(content) {
+  const td = document.createElement("td");
+  if (typeof content === "string") td.textContent = content;
+  else if (Array.isArray(content)) td.append(...content);
+  else td.append(content);
+  return td;
+}
+
 function renderTable(container, rows) {
   container.innerHTML = "";
   const table = document.createElement("table");
@@ -195,23 +215,47 @@ function renderTable(container, rows) {
     </thead>
   `;
   const tbody = document.createElement("tbody");
+  const fragment = document.createDocumentFragment();
   for (const row of rows) {
-    const tr = document.createElement("tr");
     const statusLabel = row.status_painel ?? "Sem informação";
     const planoLabel = normalizeBooleanLabel(row.possui_plano_mobilidade);
     const aprovadoLabel = normalizeBooleanLabel(row.aprovado_lei);
-    tr.innerHTML = `
-      <td><strong>${row.municipio}</strong><span class="cell-sub">${row.codigo_ibge ?? "Sem código"}</span></td>
-      <td>${row.uf}</td>
-      <td>${row.regiao}</td>
-      <td><span class="status-pill" data-status="${statusLabel}">${statusLabel}</span></td>
-      <td>${row.obrigado ? "Obrigatório" : "Não obrigatório"}</td>
-      <td>${formatNumber(row.populacao_censo_2022 ?? row.estimativa_populacional ?? 0)}</td>
-      <td><span class="table-badge" data-tone="${badgeTone(planoLabel)}">${planoLabel}</span></td>
-      <td><span class="table-badge" data-tone="${badgeTone(aprovadoLabel)}">${aprovadoLabel}</span></td>
-    `;
-    tbody.append(tr);
+
+    const munName = document.createElement("strong");
+    munName.textContent = row.municipio;
+    const munCode = document.createElement("span");
+    munCode.className = "cell-sub";
+    munCode.textContent = row.codigo_ibge ?? "Sem código";
+
+    const statusPill = document.createElement("span");
+    statusPill.className = "status-pill";
+    statusPill.dataset.status = statusLabel;
+    statusPill.textContent = statusLabel;
+
+    const planoBadge = document.createElement("span");
+    planoBadge.className = "table-badge";
+    planoBadge.dataset.tone = badgeTone(planoLabel);
+    planoBadge.textContent = planoLabel;
+
+    const aprovadoBadge = document.createElement("span");
+    aprovadoBadge.className = "table-badge";
+    aprovadoBadge.dataset.tone = badgeTone(aprovadoLabel);
+    aprovadoBadge.textContent = aprovadoLabel;
+
+    const tr = document.createElement("tr");
+    tr.append(
+      cell([munName, munCode]),
+      cell(row.uf),
+      cell(row.regiao),
+      cell(statusPill),
+      cell(row.obrigado ? "Obrigatório" : "Não obrigatório"),
+      cell(formatNumber(row.populacao_censo_2022 ?? row.estimativa_populacional ?? 0)),
+      cell(planoBadge),
+      cell(aprovadoBadge),
+    );
+    fragment.append(tr);
   }
+  tbody.append(fragment);
   table.append(tbody);
   container.append(table);
 }

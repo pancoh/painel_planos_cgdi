@@ -68,7 +68,7 @@ const approvedBar = html`<div class="approval-bar">
   </div>
 </div>`;
 const regionRows = [...latestRegions].sort((a, b) => b.percentual_aprovado - a.percentual_aprovado);
-const maxRegionCoverage = Math.max(...regionRows.map((row) => row.percentual_aprovado), 0.01);
+const maxRegionCoverage = Math.max(0.01, ...regionRows.map((row) => row.percentual_aprovado));
 const regionCard = html`<div class="region-ranking">
   ${regionRows.map((row, index) => html`<div class="region-ranking__row">
     <div class="region-ranking__header">

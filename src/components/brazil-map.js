@@ -53,6 +53,23 @@ export function brazilCoverageMap(rows, statesGeo, municipiosData, municipiosGeo
   tooltip.className = "map-tooltip";
   tooltip.hidden = true;
 
+  // ── Tooltip DOM (pre-created; only textContent updated in hot path) ────────
+  const ttHeader = document.createElement("strong");
+  const ttLines = Array.from({length: 4}, () => {
+    const s = document.createElement("span");
+    s.hidden = true;
+    return s;
+  });
+  tooltip.append(ttHeader, ...ttLines);
+
+  function setTooltip(header, lines) {
+    ttHeader.textContent = header;
+    ttLines.forEach((s, i) => {
+      if (i < lines.length) { s.textContent = lines[i]; s.hidden = false; }
+      else { s.hidden = true; }
+    });
+  }
+
   // ── SVG ────────────────────────────────────────────────────────────────────
   const svg = document.createElementNS(ns, "svg");
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
@@ -128,12 +145,12 @@ export function brazilCoverageMap(rows, statesGeo, municipiosData, municipiosGeo
       path.addEventListener("mousemove", (event) => {
         tooltip.hidden = false;
         if (munData) {
-          const obrigLabel = munData.obrigado ? "Obrigatório" : "Não obrigatório";
-          tooltip.innerHTML = `<strong>${munData.municipio}</strong>
-            <span>${obrigLabel}</span>
-            <span>${munData.status_painel}</span>`;
+          setTooltip(munData.municipio, [
+            munData.obrigado ? "Obrigatório" : "Não obrigatório",
+            munData.status_painel,
+          ]);
         } else {
-          tooltip.innerHTML = `<strong>${munCode ?? "—"}</strong>`;
+          setTooltip(munCode ?? "—", []);
         }
         const bounds = wrapper.getBoundingClientRect();
         const tw = 205, th = 80, offset = 18;
@@ -212,13 +229,16 @@ export function brazilCoverageMap(rows, statesGeo, municipiosData, municipiosGeo
     path.addEventListener("mousemove", (event) => {
       if (selectedState) return;
       tooltip.hidden = false;
-      tooltip.innerHTML = data
-        ? `<strong>${data.estado_nome} (${data.uf})</strong>
-           <span>Obrigados: ${formatNumber(data.total_obrigados)}</span>
-           <span>Plano aprovado: ${formatNumber(data.municipios_com_plano_aprovado)}</span>
-           <span>Sem plano aprovado: ${formatNumber(data.total_obrigados - data.municipios_com_plano_aprovado)}</span>
-           <span>Percentual aprovado: ${formatPercent(data.percentual_aprovado)}</span>`
-        : `<strong>${uf ?? codarea}</strong>`;
+      if (data) {
+        setTooltip(`${data.estado_nome} (${data.uf})`, [
+          `Obrigados: ${formatNumber(data.total_obrigados)}`,
+          `Plano aprovado: ${formatNumber(data.municipios_com_plano_aprovado)}`,
+          `Sem plano aprovado: ${formatNumber(data.total_obrigados - data.municipios_com_plano_aprovado)}`,
+          `Percentual aprovado: ${formatPercent(data.percentual_aprovado)}`,
+        ]);
+      } else {
+        setTooltip(uf ?? codarea, []);
+      }
       const bounds = wrapper.getBoundingClientRect();
       const tw = 205, th = 122, offset = 18;
       tooltip.style.left = `${Math.min(Math.max(12, event.clientX - bounds.left + offset), bounds.width - tw - 12)}px`;

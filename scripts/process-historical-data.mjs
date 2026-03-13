@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import xlsx from "xlsx";
+import { csvEscape } from "../src/lib/formatters.js";
 
 const ROOT = process.cwd();
 const INPUT_DIR = path.join(
@@ -122,9 +123,15 @@ async function main() {
   const snapshots = [];
 
   for (const fileInfo of files) {
-    const workbook = xlsx.readFile(path.join(INPUT_DIR, fileInfo.file), {
-      cellDates: true,
-    });
+    let workbook;
+    try {
+      workbook = xlsx.readFile(path.join(INPUT_DIR, fileInfo.file), {
+        cellDates: true,
+      });
+    } catch (err) {
+      console.warn(`Aviso: não foi possível ler ${fileInfo.file}: ${err.message}`);
+      continue;
+    }
     const sheet = workbook.Sheets["Levantamento"];
     if (!sheet) continue;
 
@@ -140,6 +147,10 @@ async function main() {
       reference_label: fileInfo.reference_label,
       municipality_count: rows.length,
     });
+  }
+
+  if (snapshots.length === 0) {
+    console.warn("Aviso: nenhum arquivo XLSX válido encontrado em", INPUT_DIR);
   }
 
   const latestDate = snapshots.at(-1)?.reference_date;
@@ -599,11 +610,6 @@ function formatCsvValue(column, value) {
     return CSV_NUMBER_FORMATTER.format(Number(value));
   }
   return String(value);
-}
-
-function csvEscape(value) {
-  const text = String(value ?? "");
-  return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 }
 
 main().catch((error) => {

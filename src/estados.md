@@ -13,7 +13,7 @@ const latestStates = await FileAttachment("data/processed/latest-ufs.json").json
 const stateSeries = await FileAttachment("data/processed/ufs-series.json").json();
 const latestMunicipios = await FileAttachment("data/processed/latest-municipios.json").json();
 const stateRows = [...latestStates].sort((a, b) => b.percentual_aprovado - a.percentual_aprovado);
-const maxStateCoverage = Math.max(...stateRows.map((row) => row.percentual_aprovado), 0.01);
+const maxStateCoverage = Math.max(0.01, ...stateRows.map((row) => row.percentual_aprovado));
 const rankingCard = html`<div class="state-ranking">
   ${stateRows.map((row, index) => html`<div class="state-ranking__row">
     <div class="state-ranking__header">

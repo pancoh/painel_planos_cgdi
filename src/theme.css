@@ -1,32 +1,3 @@
-:root {
-    --font-sans: "Aptos", "Segoe UI", "Noto Sans", "Helvetica Neue", sans-serif;
-    --font-serif: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
-    --layout-width: min(1200px, calc(100vw - 32px));
-    --theme-background: #f6f7f5;
-    --theme-foreground: #203040;
-    --theme-foreground-muted: #6d7782;
-    --theme-foreground-focus: #2f6b4f;
-    --theme-border: #d9ddd7;
-    --theme-card-background: rgba(255, 255, 255, 0.94);
-    --theme-accent: #c89a2b;
-}
-
-html {
-    background: #f6f7f5;
-}
-
-body {
-    margin: 0 auto;
-    background:
-        radial-gradient(
-            circle at top left,
-            rgba(47, 107, 79, 0.05),
-            transparent 28%
-        ),
-        linear-gradient(180deg, #f7f8f6 0%, #f0f3ef 100%);
-    color: var(--theme-foreground);
-    font-family: var(--font-sans);
-}
 
 .observablehq,
 #observablehq-center,
