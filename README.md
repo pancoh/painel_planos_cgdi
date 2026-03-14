@@ -95,7 +95,7 @@ O painel usa dois indicadores de progresso distintos:
 | **% aprovado** | `percentual_aprovado` | Municípios obrigados com **plano aprovado em lei** ÷ total de obrigados. Métrica principal do painel. |
 | **Cobertura** | `percentual_cobertura` | Municípios obrigados com **qualquer plano** (aprovado + "possui plano") ÷ total de obrigados. Métrica secundária, usada nos gráficos de evolução histórica. |
 
-**Obrigatoriedade** é determinada pelo Censo 2022 (Lei nº 12.587/2012, §1º do art. 24): municípios com população ≥ 100 mil habitantes ou integrantes de regiões metropolitanas.
+**Obrigatoriedade** é determinada pelo campo oficial `Obrigados Censo 2022 - atualizado`, conforme relação publicada para fins de acompanhamento federal (Lei nº 12.587/2012, §1º do art. 24, com redação dada pela Lei nº 14.000/2020). Os critérios legais incluem municípios com mais de 20 mil habitantes, integrantes de regiões metropolitanas/RIDEs com população total superior a 1 milhão de habitantes, e integrantes de áreas de interesse turístico. O pipeline não re-implementa esses critérios — lê o campo diretamente da planilha de levantamento.
 
 ---
 

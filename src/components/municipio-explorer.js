@@ -1,5 +1,7 @@
 import { formatNumber, csvEscape } from "../lib/formatters.js";
 
+const PAGE_SIZE = 200;
+
 export function createMunicipioExplorer(rows, options = {}) {
   const {
     title = "Consulta municipal",
@@ -21,7 +23,7 @@ export function createMunicipioExplorer(rows, options = {}) {
     porte: new Set(),
     page: 1,
   };
-  const pageSize = 200;
+  const pageSize = PAGE_SIZE;
 
   const root = document.createElement("section");
   root.className = "table-shell";
@@ -356,7 +358,7 @@ function renderPagination(
   { totalItems, totalPages, currentPage, onPageChange },
 ) {
   container.innerHTML = "";
-  if (totalItems <= 200) return;
+  if (totalItems <= PAGE_SIZE) return;
 
   const summary = document.createElement("div");
   summary.className = "table-pagination__summary";

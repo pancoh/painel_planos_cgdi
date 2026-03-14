@@ -265,30 +265,48 @@ export function brazilCoverageMap(rows, statesGeo, fetchMunicipiosByUf, fetchGeo
   // ── Legends ────────────────────────────────────────────────────────────────
   const legend = document.createElement("div");
   legend.className = "map-legend";
-  legend.innerHTML = `
-    <div class="map-legend__header">
-      <span class="map-legend__label">Leitura principal</span>
-      <div class="map-legend__swatches">
-        <span><i class="swatch swatch-approved"></i>Mais planos aprovados</span>
-        <span><i class="swatch swatch-neutral"></i>Menos planos aprovados</span>
-      </div>
-    </div>
-    <p class="map-note">Passe o cursor sobre a UF para ver detalhes. Clique para ampliar e ver os municípios.</p>
-  `;
+  const legendHeader = document.createElement("div");
+  legendHeader.className = "map-legend__header";
+  const legendLabel = document.createElement("span");
+  legendLabel.className = "map-legend__label";
+  legendLabel.textContent = "Leitura principal";
+  const legendSwatches = document.createElement("div");
+  legendSwatches.className = "map-legend__swatches";
+  const swatchApproved = document.createElement("span");
+  const iApproved = document.createElement("i");
+  iApproved.className = "swatch swatch-approved";
+  swatchApproved.append(iApproved, "Mais planos aprovados");
+  const swatchNeutral = document.createElement("span");
+  const iNeutral = document.createElement("i");
+  iNeutral.className = "swatch swatch-neutral";
+  swatchNeutral.append(iNeutral, "Menos planos aprovados");
+  legendSwatches.append(swatchApproved, swatchNeutral);
+  legendHeader.append(legendLabel, legendSwatches);
+  const legendNote = document.createElement("p");
+  legendNote.className = "map-note";
+  legendNote.textContent = "Passe o cursor sobre a UF para ver detalhes. Clique para ampliar e ver os municípios.";
+  legend.append(legendHeader, legendNote);
 
   const legendMunis = document.createElement("div");
   legendMunis.className = "map-legend";
   legendMunis.style.display = "none";
-  legendMunis.innerHTML = `
-    <div class="map-legend__header">
-      <span class="map-legend__label">Situação dos municípios</span>
-      <div class="map-legend__swatches">
-        <span><i class="swatch" style="background:#0f766e"></i>Plano aprovado</span>
-        <span><i class="swatch" style="background:#b42318"></i>Obrigado sem plano</span>
-        <span><i class="swatch" style="background:#d1d5db"></i>Demais</span>
-      </div>
-    </div>
-  `;
+  const legendMunisHeader = document.createElement("div");
+  legendMunisHeader.className = "map-legend__header";
+  const legendMunisLabel = document.createElement("span");
+  legendMunisLabel.className = "map-legend__label";
+  legendMunisLabel.textContent = "Situação dos municípios";
+  const legendMunisSwatches = document.createElement("div");
+  legendMunisSwatches.className = "map-legend__swatches";
+  for (const [color, text] of [["#0f766e", "Plano aprovado"], ["#b42318", "Obrigado sem plano"], ["#d1d5db", "Demais"]]) {
+    const span = document.createElement("span");
+    const i = document.createElement("i");
+    i.className = "swatch";
+    i.style.background = color;
+    span.append(i, text);
+    legendMunisSwatches.append(span);
+  }
+  legendMunisHeader.append(legendMunisLabel, legendMunisSwatches);
+  legendMunis.append(legendMunisHeader);
 
   wrapper.append(backBtn, legend, legendMunis, canvas, tooltip);
   return wrapper;
