@@ -176,6 +176,9 @@ function updateDownload(anchor, rows) {
     "possui_plano_mobilidade",
     "aprovado_lei",
     "elaborando_plano",
+    "instrumento_legal",
+    "numero_da_lei",
+    "data_da_lei",
     "reference_date",
   ];
   const header = columns.join(",");
@@ -186,6 +189,13 @@ function updateDownload(anchor, rows) {
     type: "text/csv;charset=utf-8",
   });
   anchor.href = URL.createObjectURL(blob);
+}
+
+function formatDateBR(value) {
+  if (!value) return "—";
+  const match = String(value).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (match) return `${match[3]}/${match[2]}/${match[1]}`;
+  return value;
 }
 
 function cell(content) {
@@ -211,6 +221,9 @@ function renderTable(container, rows) {
         <th>Pop. 2022</th>
         <th>Plano</th>
         <th>Aprovado</th>
+        <th>Instrumento Legal</th>
+        <th>Nº da Lei</th>
+        <th>Data da Lei</th>
       </tr>
     </thead>
   `;
@@ -252,6 +265,9 @@ function renderTable(container, rows) {
       cell(formatNumber(row.populacao_censo_2022 ?? row.estimativa_populacional ?? 0)),
       cell(planoBadge),
       cell(aprovadoBadge),
+      cell(row.instrumento_legal ?? "—"),
+      cell(row.numero_da_lei ?? "—"),
+      cell(formatDateBR(row.data_da_lei)),
     );
     fragment.append(tr);
   }

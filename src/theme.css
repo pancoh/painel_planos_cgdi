@@ -48,15 +48,15 @@
 
 #observablehq-header {
     border-bottom: none;
-    position: relative;
+    position: sticky;
+    top: 0;
     height: auto;
     padding: 0;
-    background: transparent;
-    box-shadow: none;
+    background: var(--theme-background, #f7f7f4);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     left: auto;
     right: auto;
-    top: auto;
-    z-index: auto;
+    z-index: 1000;
     display: block;
     margin: 0;
 }
@@ -233,13 +233,17 @@
     width: 100%;
     grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
     gap: 1rem;
-    align-items: start;
+    align-items: stretch;
 }
 
-.dashboard-sidebar,
+.dashboard-sidebar {
+    display: grid;
+    gap: 0.5rem;
+    align-content: start;
+}
+
 .dashboard-main {
     display: grid;
-    gap: 0.2rem;
 }
 
 .panel-card {
@@ -344,6 +348,7 @@
 .panel-card--summary {
     padding-top: 0.82rem;
     padding-bottom: 0.82rem;
+    box-shadow: 0 0 8px rgba(20, 31, 39, 0.07);
 }
 
 .panel-card--summary-strip {
@@ -388,14 +393,14 @@
 
 .approval-bar {
     display: grid;
-    gap: 0.8rem;
+    gap: 0.5rem;
 }
 
 .approval-bar__legend,
 .approval-bar__meta {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.8rem 1rem;
+    gap: 0.4rem 1rem;
     font-size: 0.78rem;
     color: var(--theme-foreground-muted);
 }
@@ -420,7 +425,7 @@
 
 .approval-bar__track {
     display: flex;
-    min-height: 40px;
+    min-height: 32px;
     overflow: hidden;
     border-radius: 14px;
     background: #eef1ed;
@@ -446,6 +451,25 @@
 
 .approval-bar__segment--pending {
     background: linear-gradient(135deg, #d96b72, #ca5560);
+}
+
+.approval-group {
+    display: grid;
+    gap: 0.35rem;
+    border-bottom: 1px solid var(--theme-border, #d3d8df);
+    padding-bottom: 0.5rem;
+}
+
+.approval-group__header {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-ink);
+}
+
+.approval-divider {
+    border: none;
+    border-top: 1px solid var(--theme-border, #d3d8df);
+    margin: 0;
 }
 
 .dashboard-bottom {
@@ -578,7 +602,6 @@
 .metric-card {
     padding: 1.1rem 1rem;
     position: relative;
-    overflow: hidden;
 }
 
 .metric-card::before {
@@ -586,6 +609,7 @@
     position: absolute;
     inset: 0 0 auto;
     height: 4px;
+    border-radius: 22px 22px 0 0;
     background: linear-gradient(
         90deg,
         rgba(47, 107, 79, 0.9),
@@ -639,6 +663,36 @@
     color: var(--theme-foreground-muted);
     background: rgba(109, 119, 130, 0.08);
     border-color: rgba(109, 119, 130, 0.1);
+}
+
+.metric-delta[data-tooltip] {
+    position: relative;
+    cursor: default;
+}
+
+.metric-delta[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%) scale(0.9);
+    white-space: nowrap;
+    padding: 0.45rem 0.75rem;
+    border-radius: 10px;
+    background: rgba(22, 32, 43, 0.94);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 500;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    z-index: 100;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.metric-delta[data-tooltip]:hover::after {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
 }
 
 .grid-two,

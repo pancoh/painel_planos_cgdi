@@ -90,6 +90,8 @@ const COLUMN_ALIASES = new Map(
     aprovado_em_lei_ou_ato_normativo: "aprovado_lei",
     elaborando_plano: "elaborando_plano",
     instrumento_legal: "instrumento_legal",
+    n_da_lei: "numero_da_lei",
+    data_da_lei: "data_da_lei",
     ano_de_elaboracao: "ano_elaboracao",
     oficio: "oficio",
     data_da_resposta: "data_resposta",
@@ -259,6 +261,8 @@ function normalizeRow(rawRow, fileInfo) {
     aprovado_lei: aprovado,
     elaborando_plano: elaborando,
     instrumento_legal: cleanText(canonical.instrumento_legal),
+    numero_da_lei: cleanText(canonical.numero_da_lei),
+    data_da_lei: normalizeDate(canonical.data_da_lei),
     ano_elaboracao: toNumber(canonical.ano_elaboracao),
     oficio: cleanText(canonical.oficio),
     data_resposta: normalizeDate(canonical.data_resposta),
@@ -348,9 +352,17 @@ function normalizeDate(value) {
     return value.toISOString().slice(0, 10);
   }
   const text = String(value).trim();
-  const match = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (match) {
-    const [, day, month, year] = match;
+  // DD/MM/YYYY (formato brasileiro)
+  const matchBR = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (matchBR) {
+    const [, day, month, year] = matchBR;
+    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+  }
+  // M/D/YY ou M/D/YYYY (formato exportado pelo Excel como texto)
+  const matchUS = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  if (matchUS) {
+    const [, month, day, yr] = matchUS;
+    const year = yr.length === 2 ? `20${yr}` : yr;
     return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
   }
   return text;

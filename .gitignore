@@ -5,3 +5,4 @@ planos_mobilidade/
 .DS_Store
 *.DS_Store
 .env
+src/data/processed/historico-municipios.json

@@ -43,28 +43,50 @@ const summaryCards = metricGrid([
     deltaText: percentualAprovadoDeltaText
   }
 ]);
+const POP_THRESHOLD = 250_000;
+const getPopulation = (row) => row.populacao_censo_2022 ?? row.estimativa_populacional ?? 0;
+const obrigados = latestMunicipios.filter((r) => r.obrigado === true);
+const grupoAbaixo = obrigados.filter((r) => getPopulation(r) < POP_THRESHOLD);
+const grupoAcima  = obrigados.filter((r) => getPopulation(r) >= POP_THRESHOLD);
+function groupStats(rows) {
+  const total     = rows.length;
+  const aprovados = rows.filter((r) => r.aprovado_lei === "Sim").length;
+  return { total, aprovados, semPlano: total - aprovados, pct: total > 0 ? aprovados / total : 0 };
+}
+const statsAbaixo = groupStats(grupoAbaixo);
+const statsAcima  = groupStats(grupoAcima);
+const statsTotal  = groupStats(obrigados);
+function approvalGroup(label, stats) {
+  return html`<div class="approval-group">
+    <div class="approval-group__header">
+      ${label}
+    </div>
+    <div class="approval-bar__track" aria-label=${label}>
+      <div class="approval-bar__segment approval-bar__segment--approved"
+           style=${`width:${(stats.aprovados / stats.total) * 100}%`}>
+        <strong>${formatNumber(stats.aprovados)}</strong>
+      </div>
+      <div class="approval-bar__segment approval-bar__segment--pending"
+           style=${`width:${(stats.semPlano / stats.total) * 100}%`}>
+        <strong>${formatNumber(stats.semPlano)}</strong>
+      </div>
+    </div>
+    <div class="approval-bar__meta">
+      <span>Total de obrigados: ${formatNumber(stats.total)}</span>
+      <span>Percentual com plano aprovado: <strong>${formatPercent(stats.pct)}</strong></span>
+    </div>
+  </div>`;
+}
 const approvedBar = html`<div class="approval-bar">
   <div class="approval-bar__legend">
     <span><i class="swatch swatch-approved"></i>Com plano aprovado</span>
     <span><i class="swatch swatch-pending"></i>Sem plano aprovado</span>
   </div>
-  <div class="approval-bar__track" aria-label="Municípios obrigados com e sem plano aprovado">
-    <div
-      class="approval-bar__segment approval-bar__segment--approved"
-      style=${`width:${(summary.municipios_com_plano_aprovado / summary.total_obrigados) * 100}%`}
-    >
-      <strong>${formatNumber(summary.municipios_com_plano_aprovado)}</strong>
-    </div>
-    <div
-      class="approval-bar__segment approval-bar__segment--pending"
-      style=${`width:${(obrigadosSemPlanoAprovado / summary.total_obrigados) * 100}%`}
-    >
-      <strong>${formatNumber(obrigadosSemPlanoAprovado)}</strong>
-    </div>
-  </div>
+  ${approvalGroup("Até 250 mil habitantes", statsAbaixo)}
+  ${approvalGroup("Acima de 250 mil habitantes", statsAcima)}
   <div class="approval-bar__meta">
-    <span>Total de obrigados: ${formatNumber(summary.total_obrigados)}</span>
-    <span>Percentual com plano aprovado: ${formatPercent(summary.percentual_aprovado)}</span>
+    <span>Total de obrigados: ${formatNumber(statsTotal.total)}</span>
+    <span>Percentual com plano aprovado: <strong>${formatPercent(statsTotal.pct)}</strong></span>
   </div>
 </div>`;
 const regionRows = [...latestRegions].sort((a, b) => b.percentual_aprovado - a.percentual_aprovado);
