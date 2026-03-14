@@ -3,7 +3,7 @@ import {formatDelta} from "../lib/formatters.js";
 function createNode(tag, className, text) {
   const node = document.createElement(tag);
   if (className) node.className = className;
-  if (text != null) node.textContent = text;
+  if (text !== null && text !== undefined) node.textContent = text;
   return node;
 }
 
@@ -19,7 +19,7 @@ export function metricCard({label, value, detail, delta, deltaText, tone = "defa
   const valueRow = createNode("div", "metric-value-row");
   const valueNode = createNode("strong", "metric-value", value);
   valueRow.append(valueNode);
-  if (delta != null) {
+  if (delta !== null && delta !== undefined) {
     const deltaNode = createNode("span", `metric-delta ${delta > 0 ? "up" : delta < 0 ? "down" : "flat"}`);
     deltaNode.textContent = deltaText ?? formatDelta(delta);
     deltaNode.dataset.tooltip = "Variação em relação ao mês anterior";

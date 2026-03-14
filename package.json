@@ -4,11 +4,13 @@
   "type": "module",
   "scripts": {
     "clean": "rimraf dist src/.observablehq/cache",
-    "data": "node scripts/download-geo.mjs && node scripts/process-historical-data.mjs && node scripts/generate-state-pages.mjs",
+    "data": "node scripts/download-geo.mjs && node scripts/process-historical-data.mjs && node scripts/generate-state-pages.mjs && node scripts/check-data.mjs",
+    "check-data": "node scripts/check-data.mjs",
     "predev": "npm run data",
     "dev": "observable preview",
     "prebuild": "npm run data",
     "build": "observable build",
+    "lint": "eslint scripts/ src/components/ src/lib/",
     "observable": "observable"
   },
   "dependencies": {
@@ -23,5 +25,10 @@
   },
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.0.3",
+    "globals": "^17.4.0"
   }
 }
