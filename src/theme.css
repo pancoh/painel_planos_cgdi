@@ -691,7 +691,7 @@
 }
 
 .metric-delta[data-tooltip]:hover::after,
-.metric-delta[data-tooltip]:focus::after {
+.metric-delta[data-tooltip].tooltip-open::after {
     opacity: 1;
     transform: translateX(-50%) scale(1);
 }

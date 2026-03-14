@@ -23,7 +23,11 @@ export function metricCard({label, value, detail, delta, deltaText, tone = "defa
     const deltaNode = createNode("span", `metric-delta ${delta > 0 ? "up" : delta < 0 ? "down" : "flat"}`);
     deltaNode.textContent = deltaText ?? formatDelta(delta);
     deltaNode.dataset.tooltip = "Variação em relação ao mês anterior";
-    deltaNode.tabIndex = 0;
+    deltaNode.addEventListener("click", (e) => {
+      e.stopPropagation();
+      deltaNode.classList.toggle("tooltip-open");
+    });
+    document.addEventListener("click", () => deltaNode.classList.remove("tooltip-open"));
     valueRow.append(deltaNode);
   }
   card.append(labelNode, valueRow);
