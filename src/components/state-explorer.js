@@ -9,7 +9,13 @@ export function createStateExplorer(states, stateSeries, municipalRows) {
 
   const heading = document.createElement("div");
   heading.className = "section-heading";
-  heading.innerHTML = `<div><h2>Leitura por estado</h2><p>Resumo estadual, distribuição por status e consulta municipal.</p></div>`;
+  const headingInner = document.createElement("div");
+  const headingH2 = document.createElement("h2");
+  headingH2.textContent = "Leitura por estado";
+  const headingP = document.createElement("p");
+  headingP.textContent = "Resumo estadual, distribuição por status e consulta municipal.";
+  headingInner.append(headingH2, headingP);
+  heading.append(headingInner);
 
   const controls = document.createElement("div");
   controls.className = "table-controls";
@@ -40,9 +46,9 @@ export function createStateExplorer(states, stateSeries, municipalRows) {
       metricGrid([
         {label: "Municípios", value: formatNumber(state.total_municipios)},
         {label: "Obrigados", value: formatNumber(state.total_obrigados)},
-        {label: "Com plano", value: formatNumber(state.municipios_com_plano)},
+        {label: "Possui plano", value: formatNumber(state.municipios_com_plano)},
         {label: "Planos aprovados", value: formatNumber(state.municipios_com_plano_aprovado)},
-        {label: "Cobertura", value: formatPercent(state.percentual_cobertura), tone: "accent"}
+        {label: "% aprovado", value: formatPercent(state.percentual_aprovado), tone: "accent"}
       ])
     );
     explorerHost.replaceChildren(

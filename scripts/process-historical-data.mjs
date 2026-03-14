@@ -431,12 +431,12 @@ function inferEstimateYear(rawRow) {
 
 function classifyPopulationBand(value) {
   if (!Number.isFinite(value)) return null;
-  if (value >= 1000000) return "Mais de 1 milhão";
-  if (value >= 500000) return "500 mil a 1 milhão";
-  if (value >= 250000) return "250 mil a 500 mil";
-  if (value >= 100000) return "100 mil a 250 mil";
-  if (value >= 50000) return "50 mil a 100 mil";
-  if (value >= 20000) return "20 mil a 50 mil";
+  if (value >= 1_000_000) return "Mais de 1 milhão";
+  if (value >=   500_000) return "De 500 mil a 1 milhão";
+  if (value >=   250_000) return "De 250 mil a 500 mil";
+  if (value >=   100_000) return "De 100 a 250 mil";
+  if (value >=    60_000) return "De 60 a 100 mil";
+  if (value >=    20_000) return "De 20 a 60 mil";
   return "Até 20 mil";
 }
 
@@ -584,6 +584,10 @@ function buildMetadata({
       "Sem plano",
       "Sem resposta",
       "Sem ofício",
+    ],
+    legal_deadlines: [
+      { reference_date: "2024-04-12", label: "+ 250 mil habitantes" },
+      { reference_date: "2025-04-12", label: "Até 250 mil habitantes" },
     ],
   };
 }

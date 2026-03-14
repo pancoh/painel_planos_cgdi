@@ -40,8 +40,8 @@ const rankingCard = html`<div class="state-ranking">
 ${metricGrid([
   {label: "Unidades da federação", value: formatNumber(latestStates.length)},
   {
-    label: "Maior cobertura",
-    value: [...latestStates].sort((a, b) => b.percentual_cobertura - a.percentual_cobertura)[0].uf
+    label: "Maior % aprovado",
+    value: [...latestStates].sort((a, b) => b.percentual_aprovado - a.percentual_aprovado)[0].uf
   },
   {
     label: "Mais planos aprovados",

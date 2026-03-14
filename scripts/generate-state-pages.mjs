@@ -59,10 +59,10 @@ if (!state) throw new Error("Dados não encontrados para " + uf);
 \${metricGrid([
   {label: "Municípios", value: formatNumber(state.total_municipios)},
   {label: "Obrigados", value: formatNumber(state.total_obrigados)},
-  {label: "Com plano", value: formatNumber(state.municipios_com_plano)},
+  {label: "Possui plano", value: formatNumber(state.municipios_com_plano)},
   {label: "Planos aprovados", value: formatNumber(state.municipios_com_plano_aprovado)},
   {label: "Sem resposta", value: formatNumber(state.municipios_sem_resposta)},
-  {label: "Cobertura estadual", value: formatPercent(state.percentual_cobertura), tone: "accent"}
+  {label: "% aprovado", value: formatPercent(state.percentual_aprovado), tone: "accent"}
 ])}
 
 \${createMunicipioExplorer(stateRows, {

@@ -18,7 +18,7 @@ const regionSeries = await FileAttachment("data/processed/regioes-series.json").
 ${metricGrid(
   latestRegions.map((row) => ({
     label: row.regiao,
-    value: formatPercent(row.percentual_cobertura),
+    value: formatPercent(row.percentual_aprovado),
     detail: `${formatNumber(row.municipios_com_plano_aprovado)} planos aprovados`,
     tone: "accent"
   }))

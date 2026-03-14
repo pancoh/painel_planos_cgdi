@@ -15,17 +15,6 @@ const shortDateFormatter = new Intl.DateTimeFormat("pt-BR", {
 });
 const integerFormatter = new Intl.NumberFormat("pt-BR");
 
-const LEGAL_DEADLINES = [
-  {
-    reference_date: "2024-04-12",
-    label: "+ 250 mil habitantes"
-  },
-  {
-    reference_date: "2025-04-12",
-    label: "Até 250 mil habitantes"
-  }
-];
-
 const plotDefaults = {
   style: {
     background: "transparent",
@@ -34,13 +23,13 @@ const plotDefaults = {
   }
 };
 
-export function nationalTimeline(series, {width}) {
+export function nationalTimeline(series, {width, legalDeadlines = []}) {
   const parsedSeries = series.map((row) => ({
     ...row,
     reference_date: new Date(`${row.reference_date}T12:00:00Z`)
   }));
   const maxApproved = d3.max(parsedSeries, (d) => d.municipios_com_plano_aprovado) || 0;
-  const annotationRows = LEGAL_DEADLINES.map((deadline, index) => ({
+  const annotationRows = legalDeadlines.map((deadline, index) => ({
     ...deadline,
     reference_date: new Date(`${deadline.reference_date}T12:00:00Z`),
     y: maxApproved - (index === 0 ? 8 : 24)

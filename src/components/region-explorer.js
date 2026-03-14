@@ -45,9 +45,9 @@ export function createRegionExplorer(regions, series, states) {
     metricsHost.replaceChildren(
       metricGrid([
         {label: "Municípios obrigados", value: formatNumber(region.total_obrigados)},
-        {label: "Municípios com plano", value: formatNumber(region.municipios_com_plano)},
+        {label: "Possui plano", value: formatNumber(region.municipios_com_plano)},
         {label: "Planos aprovados", value: formatNumber(region.municipios_com_plano_aprovado)},
-        {label: "Cobertura regional", value: formatPercent(region.percentual_cobertura), tone: "accent"}
+        {label: "% aprovado", value: formatPercent(region.percentual_aprovado), tone: "accent"}
       ])
     );
     tableHost.replaceChildren(renderStateTable(regionStates));
@@ -55,14 +55,14 @@ export function createRegionExplorer(regions, series, states) {
 }
 
 function renderStateTable(rows) {
-  const items = [...rows].sort((a, b) => b.percentual_cobertura - a.percentual_cobertura);
+  const items = [...rows].sort((a, b) => b.percentual_aprovado - a.percentual_aprovado);
 
   const table = document.createElement("table");
   table.className = "data-table";
 
   const thead = document.createElement("thead");
   const headerRow = document.createElement("tr");
-  for (const label of ["Estado", "UF", "Obrigados", "Planos aprovados", "Cobertura"]) {
+  for (const label of ["Estado", "UF", "Obrigados", "Planos aprovados", "% aprovado"]) {
     const th = document.createElement("th");
     th.textContent = label;
     headerRow.append(th);
@@ -89,7 +89,7 @@ function renderStateTable(rows) {
     tdAprovados.textContent = formatNumber(row.municipios_com_plano_aprovado);
 
     const tdCobertura = document.createElement("td");
-    tdCobertura.textContent = formatPercent(row.percentual_cobertura);
+    tdCobertura.textContent = formatPercent(row.percentual_aprovado);
 
     tr.append(tdEstado, tdUf, tdObrigados, tdAprovados, tdCobertura);
     tbody.append(tr);
