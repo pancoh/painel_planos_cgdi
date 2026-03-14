@@ -690,7 +690,8 @@
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
-.metric-delta[data-tooltip]:hover::after {
+.metric-delta[data-tooltip]:hover::after,
+.metric-delta[data-tooltip]:focus::after {
     opacity: 1;
     transform: translateX(-50%) scale(1);
 }
