@@ -13,11 +13,41 @@ const metadata = await FileAttachment("data/processed/metadata.json").json();
 const latestRegions = await FileAttachment("data/processed/latest-regioes.json").json();
 const latestStates = await FileAttachment("data/processed/latest-ufs.json").json();
 const estadosGeo = await FileAttachment("geo/estados.json").json();
-const latestMunicipios = await FileAttachment("data/processed/latest-municipios.json").json();
 const municipiosGeo = await FileAttachment("data/municipios-geo.json").json();
+
+// Dados municipais particionados por UF — carregados sob demanda ao clicar no mapa
+const _ufFiles = {
+  AC: FileAttachment("data/processed/municipios-uf-ac.json"),
+  AL: FileAttachment("data/processed/municipios-uf-al.json"),
+  AM: FileAttachment("data/processed/municipios-uf-am.json"),
+  AP: FileAttachment("data/processed/municipios-uf-ap.json"),
+  BA: FileAttachment("data/processed/municipios-uf-ba.json"),
+  CE: FileAttachment("data/processed/municipios-uf-ce.json"),
+  DF: FileAttachment("data/processed/municipios-uf-df.json"),
+  ES: FileAttachment("data/processed/municipios-uf-es.json"),
+  GO: FileAttachment("data/processed/municipios-uf-go.json"),
+  MA: FileAttachment("data/processed/municipios-uf-ma.json"),
+  MG: FileAttachment("data/processed/municipios-uf-mg.json"),
+  MS: FileAttachment("data/processed/municipios-uf-ms.json"),
+  MT: FileAttachment("data/processed/municipios-uf-mt.json"),
+  PA: FileAttachment("data/processed/municipios-uf-pa.json"),
+  PB: FileAttachment("data/processed/municipios-uf-pb.json"),
+  PE: FileAttachment("data/processed/municipios-uf-pe.json"),
+  PI: FileAttachment("data/processed/municipios-uf-pi.json"),
+  PR: FileAttachment("data/processed/municipios-uf-pr.json"),
+  RJ: FileAttachment("data/processed/municipios-uf-rj.json"),
+  RN: FileAttachment("data/processed/municipios-uf-rn.json"),
+  RO: FileAttachment("data/processed/municipios-uf-ro.json"),
+  RR: FileAttachment("data/processed/municipios-uf-rr.json"),
+  RS: FileAttachment("data/processed/municipios-uf-rs.json"),
+  SC: FileAttachment("data/processed/municipios-uf-sc.json"),
+  SE: FileAttachment("data/processed/municipios-uf-se.json"),
+  SP: FileAttachment("data/processed/municipios-uf-sp.json"),
+  TO: FileAttachment("data/processed/municipios-uf-to.json"),
+};
+const fetchMunicipiosByUf = (uf) => _ufFiles[uf]?.json() ?? Promise.resolve([]);
 const summary = metadata.latest_summary;
 const previousSummary = metadata.previous_summary;
-const obrigadosSemPlanoAprovado = summary.total_obrigados - summary.municipios_com_plano_aprovado;
 const percentualAprovadoDelta = previousSummary
   ? (summary.percentual_aprovado - previousSummary.percentual_aprovado) * 100
   : null;
@@ -43,19 +73,9 @@ const summaryCards = metricGrid([
     deltaText: percentualAprovadoDeltaText
   }
 ]);
-const POP_THRESHOLD = 250_000;
-const getPopulation = (row) => row.populacao_censo_2022 ?? row.estimativa_populacional ?? 0;
-const obrigados = latestMunicipios.filter((r) => r.obrigado === true);
-const grupoAbaixo = obrigados.filter((r) => getPopulation(r) < POP_THRESHOLD);
-const grupoAcima  = obrigados.filter((r) => getPopulation(r) >= POP_THRESHOLD);
-function groupStats(rows) {
-  const total     = rows.length;
-  const aprovados = rows.filter((r) => r.aprovado_lei === "Sim").length;
-  return { total, aprovados, semPlano: total - aprovados, pct: total > 0 ? aprovados / total : 0 };
-}
-const statsAbaixo = groupStats(grupoAbaixo);
-const statsAcima  = groupStats(grupoAcima);
-const statsTotal  = groupStats(obrigados);
+const statsAcima  = metadata.approval_by_population.acima_250k;
+const statsAbaixo = metadata.approval_by_population.abaixo_250k;
+const statsTotal  = metadata.approval_by_population.total;
 function approvalGroup(label, stats) {
   return html`<div class="approval-group">
     <div class="approval-group__header">
@@ -67,8 +87,8 @@ function approvalGroup(label, stats) {
         <strong>${formatNumber(stats.aprovados)}</strong>
       </div>
       <div class="approval-bar__segment approval-bar__segment--pending"
-           style=${`width:${(stats.semPlano / stats.total) * 100}%`}>
-        <strong>${formatNumber(stats.semPlano)}</strong>
+           style=${`width:${(stats.sem_plano / stats.total) * 100}%`}>
+        <strong>${formatNumber(stats.sem_plano)}</strong>
       </div>
     </div>
     <div class="approval-bar__meta">
@@ -161,7 +181,7 @@ const dashboardLayout = html`<section class="dashboard-hero">
             <p>O mapa destaca, por UF, quantos municípios obrigados pela Lei nº 12.587/2012 já possuem plano aprovado.</p>
           </div>
         </div>
-        ${brazilCoverageMap(latestStates, estadosGeo, latestMunicipios, municipiosGeo)}
+        ${brazilCoverageMap(latestStates, estadosGeo, fetchMunicipiosByUf, municipiosGeo)}
       </div>
     </div>
   </div>

@@ -190,6 +190,16 @@ async function main() {
   await writeJson("latest-ufs.json", latestStates);
   await writeJson("latest-municipios.json", latestMunicipios);
   await writeCsv("latest-municipios.csv", latestMunicipios);
+
+  // Partition by UF for lazy loading on the Brazil map
+  const byUf = new Map();
+  for (const row of latestMunicipios) {
+    if (!byUf.has(row.uf)) byUf.set(row.uf, []);
+    byUf.get(row.uf).push(row);
+  }
+  for (const [uf, ufRows] of byUf) {
+    await writeJson(`municipios-uf-${uf.toLowerCase()}.json`, ufRows);
+  }
 }
 
 function parseReferenceDate(fileName) {
@@ -532,6 +542,25 @@ function buildTimeSeries(rows, keys) {
   });
 }
 
+const POP_THRESHOLD = 250_000;
+
+function approvalByPopulation(rows) {
+  const getPopulation = (row) => row.populacao_censo_2022 ?? row.estimativa_populacional ?? 0;
+  const obrigados = rows.filter((row) => row.obrigado);
+  const acima = obrigados.filter((row) => getPopulation(row) >= POP_THRESHOLD);
+  const abaixo = obrigados.filter((row) => getPopulation(row) < POP_THRESHOLD);
+  const popStats = (group) => {
+    const total = group.length;
+    const aprovados = group.filter((row) => row.aprovado_lei === "Sim").length;
+    return { total, aprovados, sem_plano: total - aprovados, pct: total > 0 ? aprovados / total : 0 };
+  };
+  return {
+    acima_250k: popStats(acima),
+    abaixo_250k: popStats(abaixo),
+    total: popStats(obrigados),
+  };
+}
+
 function buildMetadata({
   snapshots,
   latestRows,
@@ -589,6 +618,7 @@ function buildMetadata({
       { reference_date: "2024-04-12", label: "+ 250 mil habitantes" },
       { reference_date: "2025-04-12", label: "Até 250 mil habitantes" },
     ],
+    approval_by_population: approvalByPopulation(latestRows),
   };
 }
 

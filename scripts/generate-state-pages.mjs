@@ -48,9 +48,8 @@ import {formatNumber, formatPercent} from "../lib/formatters.js";
 
 const uf = "${uf.toUpperCase()}";
 const latestStates = await FileAttachment("../data/processed/latest-ufs.json").json();
-const latestMunicipios = await FileAttachment("../data/processed/latest-municipios.json").json();
+const stateRows = await FileAttachment("../data/processed/municipios-uf-${uf}.json").json();
 const state = latestStates.find((row) => row.uf === uf);
-const stateRows = latestMunicipios.filter((row) => row.uf === uf);
 if (!state) throw new Error("Dados não encontrados para " + uf);
 \`\`\`
 

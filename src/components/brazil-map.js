@@ -21,11 +21,10 @@ function municipioColor(d) {
 }
 
 // statesGeo: GeoJSON FeatureCollection with all 27 states (passed from index.md)
-// municipiosData: array of municipality rows (passed from index.md)
+// fetchMunicipiosByUf: async (uf: string) => municipality rows[] — called on state click
 // municipiosGeo: object keyed by state IBGE code string → GeoJSON FeatureCollection
-export function brazilCoverageMap(rows, statesGeo, municipiosData, municipiosGeo) {
+export function brazilCoverageMap(rows, statesGeo, fetchMunicipiosByUf, municipiosGeo) {
   const values = new Map(rows.map((row) => [row.uf, row]));
-  const munIndex = new Map((municipiosData ?? []).map((m) => [m.codigo_ibge, m]));
   const maxApproved = d3.max(rows, (d) => d.municipios_com_plano_aprovado) || 1;
   const color = d3
     .scaleLinear()
@@ -130,7 +129,7 @@ export function brazilCoverageMap(rows, statesGeo, municipiosData, municipiosGeo
       .call(zoom.transform, d3.zoomIdentity);
   }
 
-  function loadMunicipios(codarea) {
+  function loadMunicipios(codarea, munIndex) {
     munisLayer.innerHTML = "";
     const geoData = municipiosGeo?.[codarea] ?? {features: []};
     for (const feature of geoData.features ?? []) {
@@ -166,7 +165,7 @@ export function brazilCoverageMap(rows, statesGeo, municipiosData, municipiosGeo
     }
   }
 
-  function handleStateClick(feature) {
+  async function handleStateClick(feature) {
     const codarea = feature.properties?.codarea;
     const uf = IBGE_TO_UF[Number(codarea)];
     selectedState = {codarea, uf};
@@ -190,7 +189,12 @@ export function brazilCoverageMap(rows, statesGeo, municipiosData, municipiosGeo
     legend.style.display = "none";
     legendMunis.style.display = "";
     zoomToFeature(feature);
-    loadMunicipios(codarea);
+
+    const munData = await fetchMunicipiosByUf(uf);
+    // Guard: ignore if user navigated to another state while loading
+    if (selectedState?.uf !== uf) return;
+    const munIndex = new Map(munData.map((m) => [m.codigo_ibge, m]));
+    loadMunicipios(codarea, munIndex);
   }
 
   function handleBack() {
