@@ -1811,7 +1811,16 @@ body {
         height: 38px;
     }
     .site-nav {
-        gap: 0.6rem 1rem;
+        flex-wrap: nowrap;
+        gap: 0;
+        justify-content: space-between;
+        width: 100%;
+    }
+    .site-nav a {
+        font-size: 0.85rem;
+        padding: 0.5rem 0.4rem;
+        text-align: center;
+        flex: 1;
     }
     .metrics-grid,
     .grid-two {
