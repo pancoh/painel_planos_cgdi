@@ -18,7 +18,7 @@ export function createMunicipioExplorer(rows, options = {}) {
     regiao: defaultRegion,
     status: defaultStatus,
     obrigatoriedade: defaultObrigatoriedade,
-    porte: "Todos",
+    porte: new Set(),
     page: 1,
   };
   const pageSize = 200;
@@ -106,17 +106,17 @@ export function createMunicipioExplorer(rows, options = {}) {
     "Mais de 1 milhão",
   ];
   const porteValues = unique(rows, "porte_populacional");
-  controls.append(
-    control(
-      "Porte populacional",
-      selectInput(
-        ["Todos", ...porteOrder.filter(v => porteValues.includes(v))],
-        state,
-        "porte",
-        update,
-      ),
-    ),
-  );
+  const porteControl = document.createElement("div");
+  porteControl.className = "control";
+  const porteLabel = document.createElement("span");
+  porteLabel.textContent = "Porte populacional";
+  porteControl.append(porteLabel, checkboxGroupInput(
+    porteOrder.filter(v => porteValues.includes(v)),
+    state,
+    "porte",
+    update,
+  ));
+  controls.append(porteControl);
   controls.append(download);
 
   root.append(heading, controls, stats, pagination, tableWrap);
@@ -138,7 +138,7 @@ export function createMunicipioExplorer(rows, options = {}) {
       if (state.uf !== "Todos" && row.uf !== state.uf) return false;
       if (state.status !== "Todos" && row.status_painel !== state.status)
         return false;
-      if (state.porte !== "Todos" && row.porte_populacional !== state.porte)
+      if (state.porte.size > 0 && !state.porte.has(row.porte_populacional))
         return false;
       if (state.obrigatoriedade !== "Todos") {
         const label = row.obrigado ? "Obrigatório" : "Não obrigatório";
@@ -292,6 +292,31 @@ function control(label, input) {
   const text = document.createElement("span");
   text.textContent = label;
   wrap.append(text, input);
+  return wrap;
+}
+
+function checkboxGroupInput(options, state, key, onChange) {
+  const wrap = document.createElement("div");
+  wrap.className = "checkbox-group";
+  for (const option of options) {
+    const label = document.createElement("label");
+    label.className = "checkbox-pill";
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.value = option;
+    input.checked = state[key].has(option);
+    input.addEventListener("change", () => {
+      if (input.checked) {
+        state[key].add(option);
+      } else {
+        state[key].delete(option);
+      }
+      state.page = 1;
+      onChange();
+    });
+    label.append(input, document.createTextNode(option));
+    wrap.append(label);
+  }
   return wrap;
 }
 

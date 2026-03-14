@@ -284,12 +284,10 @@ function normalizeRow(rawRow, fileInfo) {
 
   row.obrigado = obrigado;
   row.porte_populacional =
-    row.faixa_populacional_estimativa ||
     row.faixa_populacional_2022 ||
     row.faixa_populacional_2010 ||
     classifyPopulationBand(
-      row.estimativa_populacional ??
-        row.populacao_censo_2022 ??
+      row.populacao_censo_2022 ??
         row.populacao_censo_2010,
     );
   row.status_painel = deriveStatus(row);

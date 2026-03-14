@@ -1112,6 +1112,42 @@
     color: var(--theme-foreground-muted);
 }
 
+.checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    padding-top: 0.15rem;
+}
+
+.checkbox-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid var(--theme-border);
+    background: rgba(255, 255, 255, 0.8);
+    font-size: 0.84rem;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    user-select: none;
+}
+
+.checkbox-pill input[type="checkbox"] {
+    display: none;
+}
+
+.checkbox-pill:has(input:checked) {
+    background: rgba(15, 118, 110, 0.12);
+    border-color: rgba(15, 118, 110, 0.4);
+    color: var(--theme-foreground-focus);
+    font-weight: 600;
+}
+
+.checkbox-pill:hover {
+    border-color: rgba(15, 118, 110, 0.35);
+    background: rgba(15, 118, 110, 0.06);
+}
+
 .control select,
 .control input {
     min-height: 44px;
