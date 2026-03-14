@@ -2,7 +2,7 @@ import {metricGrid} from "./cards.js";
 import {formatNumber, formatPercent} from "../lib/formatters.js";
 import {createMunicipioExplorer} from "./municipio-explorer.js";
 
-export function createStateExplorer(states, stateSeries, municipalRows) {
+export function createStateExplorer(states, fetchMunicipiosByUf) {
   const root = document.createElement("section");
   root.className = "state-explorer";
   let currentUf = states[0]?.uf;
@@ -39,9 +39,9 @@ export function createStateExplorer(states, stateSeries, municipalRows) {
   update();
   return root;
 
-  function update() {
-    const state = states.find((row) => row.uf === currentUf);
-    const rows = municipalRows.filter((row) => row.uf === currentUf);
+  async function update() {
+    const uf = currentUf;
+    const state = states.find((row) => row.uf === uf);
     metricsHost.replaceChildren(
       metricGrid([
         {label: "Municípios", value: formatNumber(state.total_municipios)},
@@ -51,10 +51,16 @@ export function createStateExplorer(states, stateSeries, municipalRows) {
         {label: "% aprovado", value: formatPercent(state.percentual_aprovado), tone: "accent"}
       ])
     );
+    const loading = document.createElement("p");
+    loading.className = "table-meta";
+    loading.textContent = "Carregando municípios…";
+    explorerHost.replaceChildren(loading);
+    const rows = await fetchMunicipiosByUf(uf);
+    if (currentUf !== uf) return;
     explorerHost.replaceChildren(
       createMunicipioExplorer(rows, {
         title: `Municípios de ${state.estado_nome}`,
-        defaultUf: currentUf,
+        defaultUf: uf,
         showUfFilter: false,
         showRegionFilter: false
       })

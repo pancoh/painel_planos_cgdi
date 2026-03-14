@@ -13,9 +13,8 @@ const metadata = await FileAttachment("data/processed/metadata.json").json();
 const latestRegions = await FileAttachment("data/processed/latest-regioes.json").json();
 const latestStates = await FileAttachment("data/processed/latest-ufs.json").json();
 const estadosGeo = await FileAttachment("geo/estados.json").json();
-const municipiosGeo = await FileAttachment("data/municipios-geo.json").json();
 
-// Dados municipais particionados por UF — carregados sob demanda ao clicar no mapa
+// Dados municipais por UF — carregados sob demanda ao clicar no mapa
 const _ufFiles = {
   AC: FileAttachment("data/processed/municipios-uf-ac.json"),
   AL: FileAttachment("data/processed/municipios-uf-al.json"),
@@ -46,6 +45,38 @@ const _ufFiles = {
   TO: FileAttachment("data/processed/municipios-uf-to.json"),
 };
 const fetchMunicipiosByUf = (uf) => _ufFiles[uf]?.json() ?? Promise.resolve([]);
+
+// Geometria municipal por código IBGE do estado — carregada sob demanda ao clicar no mapa
+const _geoFiles = {
+  "11": FileAttachment("geo/municipios-11.json"),
+  "12": FileAttachment("geo/municipios-12.json"),
+  "13": FileAttachment("geo/municipios-13.json"),
+  "14": FileAttachment("geo/municipios-14.json"),
+  "15": FileAttachment("geo/municipios-15.json"),
+  "16": FileAttachment("geo/municipios-16.json"),
+  "17": FileAttachment("geo/municipios-17.json"),
+  "21": FileAttachment("geo/municipios-21.json"),
+  "22": FileAttachment("geo/municipios-22.json"),
+  "23": FileAttachment("geo/municipios-23.json"),
+  "24": FileAttachment("geo/municipios-24.json"),
+  "25": FileAttachment("geo/municipios-25.json"),
+  "26": FileAttachment("geo/municipios-26.json"),
+  "27": FileAttachment("geo/municipios-27.json"),
+  "28": FileAttachment("geo/municipios-28.json"),
+  "29": FileAttachment("geo/municipios-29.json"),
+  "31": FileAttachment("geo/municipios-31.json"),
+  "32": FileAttachment("geo/municipios-32.json"),
+  "33": FileAttachment("geo/municipios-33.json"),
+  "35": FileAttachment("geo/municipios-35.json"),
+  "41": FileAttachment("geo/municipios-41.json"),
+  "42": FileAttachment("geo/municipios-42.json"),
+  "43": FileAttachment("geo/municipios-43.json"),
+  "50": FileAttachment("geo/municipios-50.json"),
+  "51": FileAttachment("geo/municipios-51.json"),
+  "52": FileAttachment("geo/municipios-52.json"),
+  "53": FileAttachment("geo/municipios-53.json"),
+};
+const fetchGeoByState = (codarea) => _geoFiles[String(codarea)]?.json() ?? Promise.resolve({features: []});
 const summary = metadata.latest_summary;
 const previousSummary = metadata.previous_summary;
 const percentualAprovadoDelta = previousSummary
@@ -181,7 +212,7 @@ const dashboardLayout = html`<section class="dashboard-hero">
             <p>O mapa destaca, por UF, quantos municípios obrigados pela Lei nº 12.587/2012 já possuem plano aprovado.</p>
           </div>
         </div>
-        ${brazilCoverageMap(latestStates, estadosGeo, fetchMunicipiosByUf, municipiosGeo)}
+        ${brazilCoverageMap(latestStates, estadosGeo, fetchMunicipiosByUf, fetchGeoByState)}
       </div>
     </div>
   </div>

@@ -22,8 +22,8 @@ function municipioColor(d) {
 
 // statesGeo: GeoJSON FeatureCollection with all 27 states (passed from index.md)
 // fetchMunicipiosByUf: async (uf: string) => municipality rows[] — called on state click
-// municipiosGeo: object keyed by state IBGE code string → GeoJSON FeatureCollection
-export function brazilCoverageMap(rows, statesGeo, fetchMunicipiosByUf, municipiosGeo) {
+// fetchGeoByState: async (codarea: string) => GeoJSON FeatureCollection — called on state click
+export function brazilCoverageMap(rows, statesGeo, fetchMunicipiosByUf, fetchGeoByState) {
   const values = new Map(rows.map((row) => [row.uf, row]));
   const maxApproved = d3.max(rows, (d) => d.municipios_com_plano_aprovado) || 1;
   const color = d3
@@ -129,9 +129,8 @@ export function brazilCoverageMap(rows, statesGeo, fetchMunicipiosByUf, municipi
       .call(zoom.transform, d3.zoomIdentity);
   }
 
-  function loadMunicipios(codarea, munIndex) {
+  function loadMunicipios(geoData, munIndex) {
     munisLayer.innerHTML = "";
-    const geoData = municipiosGeo?.[codarea] ?? {features: []};
     for (const feature of geoData.features ?? []) {
       const munCode = feature.properties?.codarea;
       const munData = munIndex.get(munCode);
@@ -190,11 +189,14 @@ export function brazilCoverageMap(rows, statesGeo, fetchMunicipiosByUf, municipi
     legendMunis.style.display = "";
     zoomToFeature(feature);
 
-    const munData = await fetchMunicipiosByUf(uf);
+    const [munData, geoData] = await Promise.all([
+      fetchMunicipiosByUf(uf),
+      fetchGeoByState(codarea),
+    ]);
     // Guard: ignore if user navigated to another state while loading
     if (selectedState?.uf !== uf) return;
     const munIndex = new Map(munData.map((m) => [m.codigo_ibge, m]));
-    loadMunicipios(codarea, munIndex);
+    loadMunicipios(geoData, munIndex);
   }
 
   function handleBack() {

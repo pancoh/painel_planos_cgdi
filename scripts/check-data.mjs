@@ -9,6 +9,14 @@ import { join } from "node:path";
 
 const OUTPUT_DIR = join(process.cwd(), "src", "data", "processed");
 
+// Thresholds configuráveis — ajustar se a base de municípios mudar significativamente
+const THRESHOLDS = {
+  minMunicipios: 5400,       // mínimo esperado de linhas em latest-municipios.json
+  maxMunicipios: 5700,       // máximo esperado
+  minSnapshotRows: 5000,     // mínimo de municipality_count por snapshot
+  maxNullPopulation: 50,     // acima disso vira erro (não apenas aviso)
+};
+
 const EXPECTED_COLUMNS = [
   "codigo_ibge",
   "uf",
@@ -78,19 +86,31 @@ ok(`metadata.json, snapshots.json, latest-municipios.json, latest-ufs.json carre
 
 // ── 2. Contagem de snapshots ───────────────────────────────────────────────
 console.log("\n[2] Verificando snapshots...");
-if (snapshots.length === metadata.total_snapshots) {
-  ok(`${snapshots.length} snapshots (bate com metadata.total_snapshots)`);
-} else {
-  err(`snapshots.json tem ${snapshots.length} entradas, mas metadata.total_snapshots = ${metadata.total_snapshots}`);
-}
 if (snapshots.length === 0) {
   err("Nenhum snapshot encontrado");
 } else {
+  if (snapshots.length === metadata.total_snapshots) {
+    ok(`${snapshots.length} snapshots (bate com metadata.total_snapshots)`);
+  } else {
+    err(`snapshots.json tem ${snapshots.length} entradas, mas metadata.total_snapshots = ${metadata.total_snapshots}`);
+  }
   ok(`Último snapshot: ${snapshots.at(-1).reference_date}`);
+
+  // Validar municipality_count por snapshot
+  let snapshotRowErrors = 0;
+  for (const snap of snapshots) {
+    if (snap.municipality_count < THRESHOLDS.minSnapshotRows) {
+      err(`Snapshot ${snap.reference_date}: municipality_count=${snap.municipality_count} abaixo do mínimo (${THRESHOLDS.minSnapshotRows})`);
+      snapshotRowErrors++;
+    }
+  }
+  if (snapshotRowErrors === 0) {
+    ok(`Todos os ${snapshots.length} snapshots têm municipality_count ≥ ${THRESHOLDS.minSnapshotRows}`);
+  }
 }
 
-// ── 3. Colunas obrigatórias em latest-municipios.json ─────────────────────
-console.log("\n[3] Verificando colunas obrigatórias...");
+// ── 3. Colunas obrigatórias e contagem em latest-municipios.json ──────────
+console.log("\n[3] Verificando colunas obrigatórias e contagem...");
 if (municipios.length === 0) {
   err("latest-municipios.json está vazio");
 } else {
@@ -100,6 +120,11 @@ if (municipios.length === 0) {
     ok(`Todas as ${EXPECTED_COLUMNS.length} colunas obrigatórias presentes`);
   } else {
     err(`Colunas ausentes: ${missing.join(", ")}`);
+  }
+  if (municipios.length < THRESHOLDS.minMunicipios || municipios.length > THRESHOLDS.maxMunicipios) {
+    err(`Contagem de municípios fora do esperado: ${municipios.length} (esperado: ${THRESHOLDS.minMunicipios}–${THRESHOLDS.maxMunicipios})`);
+  } else {
+    ok(`${municipios.length} municípios (dentro do intervalo esperado)`);
   }
 }
 
@@ -133,8 +158,12 @@ if (invalidPortes.size === 0) {
 } else {
   err(`Valores inválidos em porte_populacional: ${[...invalidPortes].join(", ")}`);
 }
-if (nullPorteCount > 0) {
-  warn(`${nullPorteCount} municípios sem porte_populacional (sem dados de população)`);
+if (nullPorteCount === 0) {
+  ok(`Todos os municípios têm porte_populacional preenchido`);
+} else if (nullPorteCount <= THRESHOLDS.maxNullPopulation) {
+  warn(`${nullPorteCount} município(s) sem porte_populacional (abaixo do limite de ${THRESHOLDS.maxNullPopulation})`);
+} else {
+  err(`${nullPorteCount} município(s) sem porte_populacional — excede o limite de ${THRESHOLDS.maxNullPopulation}`);
 }
 
 // ── 6. Cobertura de UFs ────────────────────────────────────────────────────
