@@ -82,8 +82,8 @@ const approvedBar = html`<div class="approval-bar">
     <span><i class="swatch swatch-approved"></i>Com plano aprovado</span>
     <span><i class="swatch swatch-pending"></i>Sem plano aprovado</span>
   </div>
-  ${approvalGroup("Até 250 mil habitantes", statsAbaixo)}
   ${approvalGroup("Acima de 250 mil habitantes", statsAcima)}
+  ${approvalGroup("Até 250 mil habitantes", statsAbaixo)}
   <div class="approval-bar__meta">
     <span>Total de obrigados: ${formatNumber(statsTotal.total)}</span>
     <span>Percentual com plano aprovado: <strong>${formatPercent(statsTotal.pct)}</strong></span>
