@@ -52,8 +52,7 @@
     top: 0;
     height: auto;
     padding: 0;
-    background: var(--theme-background, #f7f7f4);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    background: transparent;
     left: auto;
     right: auto;
     z-index: 1000;
@@ -1401,9 +1400,7 @@ body {
 
 .site-nav {
     gap: 0.5rem;
-    border-left: 1px solid var(--theme-border);
-    padding-left: 1rem;
-    margin-left: 0.25rem;
+    margin-left: auto;
 }
 
 .site-nav a {
