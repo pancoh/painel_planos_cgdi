@@ -1574,11 +1574,13 @@ body {
 .metric-card {
     padding: 1rem;
     border-radius: var(--theme-radius-md);
+    background:
+        linear-gradient(90deg, #0f766e, #b45309) top / 100% 3px no-repeat,
+        var(--theme-card-background);
 }
 
 .metric-card::before {
-    height: 3px;
-    background: linear-gradient(90deg, #0f766e, #b45309);
+    content: none;
 }
 
 .metric-label {
