@@ -1061,6 +1061,10 @@
     min-width: 160px;
 }
 
+.map-tooltip[hidden] {
+    display: none;
+}
+
 .donut-group {
     cursor: default;
 }
