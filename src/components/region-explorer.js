@@ -8,7 +8,13 @@ export function createRegionExplorer(regions, series, states) {
 
   const heading = document.createElement("div");
   heading.className = "section-heading";
-  heading.innerHTML = `<div><h2>Leitura regional</h2><p>Comparação territorial e evolução histórica das grandes regiões.</p></div>`;
+  const headingInner = document.createElement("div");
+  const headingH2 = document.createElement("h2");
+  headingH2.textContent = "Leitura regional";
+  const headingP = document.createElement("p");
+  headingP.textContent = "Comparação territorial e evolução histórica das grandes regiões.";
+  headingInner.append(headingH2, headingP);
+  heading.append(headingInner);
 
   const controls = document.createElement("div");
   controls.className = "table-controls";
@@ -44,40 +50,53 @@ export function createRegionExplorer(regions, series, states) {
         {label: "Cobertura regional", value: formatPercent(region.percentual_cobertura), tone: "accent"}
       ])
     );
-    tableHost.innerHTML = renderStateTable(regionStates);
+    tableHost.replaceChildren(renderStateTable(regionStates));
   }
 }
 
 function renderStateTable(rows) {
   const items = [...rows].sort((a, b) => b.percentual_cobertura - a.percentual_cobertura);
-  const body = items
-    .map(
-      (row) => `
-        <tr>
-          <td><a href="estado/${row.uf.toLowerCase()}">${row.estado_nome}</a></td>
-          <td>${row.uf}</td>
-          <td>${formatNumber(row.total_obrigados)}</td>
-          <td>${formatNumber(row.municipios_com_plano_aprovado)}</td>
-          <td>${formatPercent(row.percentual_cobertura)}</td>
-        </tr>
-      `
-    )
-    .join("");
 
-  return `
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Estado</th>
-          <th>UF</th>
-          <th>Obrigados</th>
-          <th>Planos aprovados</th>
-          <th>Cobertura</th>
-        </tr>
-      </thead>
-      <tbody>${body}</tbody>
-    </table>
-  `;
+  const table = document.createElement("table");
+  table.className = "data-table";
+
+  const thead = document.createElement("thead");
+  const headerRow = document.createElement("tr");
+  for (const label of ["Estado", "UF", "Obrigados", "Planos aprovados", "Cobertura"]) {
+    const th = document.createElement("th");
+    th.textContent = label;
+    headerRow.append(th);
+  }
+  thead.append(headerRow);
+
+  const tbody = document.createElement("tbody");
+  for (const row of items) {
+    const tr = document.createElement("tr");
+
+    const tdEstado = document.createElement("td");
+    const link = document.createElement("a");
+    link.href = `estado/${row.uf.toLowerCase()}`;
+    link.textContent = row.estado_nome;
+    tdEstado.append(link);
+
+    const tdUf = document.createElement("td");
+    tdUf.textContent = row.uf;
+
+    const tdObrigados = document.createElement("td");
+    tdObrigados.textContent = formatNumber(row.total_obrigados);
+
+    const tdAprovados = document.createElement("td");
+    tdAprovados.textContent = formatNumber(row.municipios_com_plano_aprovado);
+
+    const tdCobertura = document.createElement("td");
+    tdCobertura.textContent = formatPercent(row.percentual_cobertura);
+
+    tr.append(tdEstado, tdUf, tdObrigados, tdAprovados, tdCobertura);
+    tbody.append(tr);
+  }
+
+  table.append(thead, tbody);
+  return table;
 }
 
 function labelWrap(label, input) {

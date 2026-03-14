@@ -175,6 +175,7 @@ export function createMunicipioExplorer(rows, options = {}) {
 }
 
 function updateDownload(anchor, rows) {
+  if (anchor.href.startsWith("blob:")) URL.revokeObjectURL(anchor.href);
   const columns = [
     "municipio",
     "uf",

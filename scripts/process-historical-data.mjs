@@ -550,7 +550,6 @@ function buildMetadata({
   return {
     title: "Painel de Planos de Mobilidade Urbana",
     source_directory: path.relative(ROOT, INPUT_DIR),
-    generated_at: new Date().toISOString(),
     last_reference_date: snapshots.at(-1)?.reference_date ?? null,
     last_reference_label: snapshots.at(-1)?.reference_label ?? null,
     total_snapshots: snapshots.length,

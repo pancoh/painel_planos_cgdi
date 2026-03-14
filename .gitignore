@@ -5,4 +5,18 @@ planos_mobilidade/
 .DS_Store
 *.DS_Store
 .env
+# Artefatos gerados pelo pipeline — reconstruídos por `npm run data`
 src/data/processed/historico-municipios.json
+src/data/processed/metadata.json
+src/data/processed/snapshots.json
+src/data/processed/brasil-series.json
+src/data/processed/regioes-series.json
+src/data/processed/ufs-series.json
+src/data/processed/latest-regioes.json
+src/data/processed/latest-ufs.json
+src/data/processed/latest-municipios.json
+src/data/processed/latest-municipios.csv
+src/data/processed/municipios-uf-*.json
+
+# Páginas de estado geradas por generate-state-pages.mjs
+src/estado/*.md

@@ -25,9 +25,11 @@ export function metricCard({label, value, detail, delta, deltaText, tone = "defa
     deltaNode.dataset.tooltip = "Variação em relação ao mês anterior";
     deltaNode.addEventListener("click", (e) => {
       e.stopPropagation();
-      deltaNode.classList.toggle("tooltip-open");
+      const isOpen = deltaNode.classList.toggle("tooltip-open");
+      if (isOpen) {
+        document.addEventListener("click", () => deltaNode.classList.remove("tooltip-open"), { once: true });
+      }
     });
-    document.addEventListener("click", () => deltaNode.classList.remove("tooltip-open"));
     valueRow.append(deltaNode);
   }
   card.append(labelNode, valueRow);
