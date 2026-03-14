@@ -96,11 +96,21 @@ export function createMunicipioExplorer(rows, options = {}) {
       ),
     ),
   );
+  const porteOrder = [
+    "Até 20 mil",
+    "De 20 a 60 mil",
+    "De 60 a 100 mil",
+    "De 100 a 250 mil",
+    "De 250 mil a 500 mil",
+    "De 500 mil a 1 milhão",
+    "Mais de 1 milhão",
+  ];
+  const porteValues = unique(rows, "porte_populacional");
   controls.append(
     control(
       "Porte populacional",
       selectInput(
-        ["Todos", ...unique(rows, "porte_populacional")],
+        ["Todos", ...porteOrder.filter(v => porteValues.includes(v))],
         state,
         "porte",
         update,
