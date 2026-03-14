@@ -45,6 +45,7 @@ export default {
   `,
   footer: `
     <div class="site-shell footer-shell">
+      <hr class="page-note-divider" style="margin-top:0">
       <p>Painel para acompanhamento da situação dos Planos de Mobilidade Urbana no Brasil.</p>
       <p>Fonte: Secretaria Nacional de Mobilidade Urbana</p>
     </div>

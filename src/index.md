@@ -172,3 +172,7 @@ const dashboardLayout = html`<section class="dashboard-hero">
 ```js
 display(dashboardLayout)
 ```
+
+<p class="page-note">No painel acima, está disponível a visualização da situação de elaboração e aprovação dos planos de mobilidade urbana de cada um dos municípios do país e ainda a visualização pelo recorte populacional, acima e abaixo de 250 mil habitantes, dos municípios obrigados a elaborar e a aprovar o Plano de Mobilidade Urbana, segundo critérios elencados pelo § 1º do art. 24 da PNMU e conforme dados publicados pelo Instituto Brasileiro de Geografia e Estatística (IBGE).</p>
+
+<p class="page-note">Os dados utilizados neste painel estão disponíveis para download na aba <a href="/municipios">Municípios</a>, onde é possível exportar a relação completa dos municípios com a situação de elaboração dos planos de mobilidade urbana e a relação dos municípios obrigados, segundo a Lei Federal nº 12.587/2012. Cabe ressaltar que as informações prestadas são de responsabilidade das prefeituras. Destacamos ainda que em nenhum momento houve qualquer avaliação do conteúdo dos Planos de Mobilidade Urbana por parte do Ministério das Cidades (MCID).</p>
