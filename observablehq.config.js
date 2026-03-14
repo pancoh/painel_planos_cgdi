@@ -3,7 +3,6 @@ export default {
   root: "src",
   output: "dist",
   theme: "air",
-  favicon: "favicon.png",
   sidebar: false,
   toc: false,
   pager: false,
@@ -19,6 +18,8 @@ export default {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="/favicon.png" type="image/png">
+    <link rel="apple-touch-icon" href="/favicon.png">
     <link rel="stylesheet" href="/theme.css">
   `,
   header: `
