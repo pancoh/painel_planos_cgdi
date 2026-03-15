@@ -23,7 +23,11 @@ export default {
     <link rel="stylesheet" href="/theme.css">
     <script>
       (function() {
-        var norm = function(p) { return p === '/' ? '/' : p.replace(/\/$/, ''); };
+        var norm = function(p) {
+          p = p.replace(/\/$/, '') || '/';
+          p = p.replace(/\/index(\.html)?$/, '') || '/';
+          return p;
+        };
         var activePath = norm(window.location.pathname);
         function markActive() {
           var nav = document.querySelector('.site-nav');
