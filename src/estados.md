@@ -3,9 +3,7 @@ title: Estados
 toc: false
 ---
 
-```js
-document.querySelector('.site-nav a[href="/estados"]')?.setAttribute('aria-current', 'page');
-```
+<style>.site-nav a[href="/estados"] { background: var(--theme-foreground-focus); color: #fff; border-color: transparent; box-shadow: 0 2px 8px rgba(15,118,110,0.28); }</style>
 
 ```js
 import {html} from "htl";
