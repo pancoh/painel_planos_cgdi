@@ -3,7 +3,7 @@ title: Municípios
 toc: false
 ---
 
-<style>.site-nav a[href="/municipios"] { background: var(--theme-foreground-focus); color: #fff; border-color: transparent; box-shadow: 0 2px 8px rgba(15,118,110,0.28); }</style>
+<style>.site-nav a[href="./municipios"] { background: var(--theme-foreground-focus); color: #fff; border-color: transparent; box-shadow: 0 2px 8px rgba(15,118,110,0.28); }</style>
 
 ```js
 import {createMunicipioExplorer} from "./components/municipio-explorer.js";

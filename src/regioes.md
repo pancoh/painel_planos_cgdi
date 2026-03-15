@@ -3,7 +3,7 @@ title: Regiões
 toc: false
 ---
 
-<style>.site-nav a[href="/regioes"] { background: var(--theme-foreground-focus); color: #fff; border-color: transparent; box-shadow: 0 2px 8px rgba(15,118,110,0.28); }</style>
+<style>.site-nav a[href="./regioes"] { background: var(--theme-foreground-focus); color: #fff; border-color: transparent; box-shadow: 0 2px 8px rgba(15,118,110,0.28); }</style>
 
 ```js
 import {metricGrid} from "./components/cards.js";
