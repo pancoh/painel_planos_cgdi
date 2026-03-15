@@ -21,11 +21,17 @@ export default {
     <link rel="icon" href="/favicon.png" type="image/png">
     <link rel="apple-touch-icon" href="/favicon.png">
     <link rel="stylesheet" href="/theme.css">
-    <script type="module">
-      const norm = (p) => (p.replace(/\/$/, '') || '/').replace(/\/index(\.html)?$/, '') || '/';
-      const active = norm(location.pathname);
-      document.querySelectorAll('.site-nav a').forEach(a => {
-        if (norm(a.getAttribute('href')) === active) a.setAttribute('aria-current', 'page');
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        var path = window.location.pathname.replace(/\/$/, '') || '/';
+        path = path.replace(/\/index(\.html)?$/, '') || '/';
+        var links = document.querySelectorAll('.site-nav a');
+        for (var i = 0; i < links.length; i++) {
+          var href = links[i].getAttribute('href').replace(/\/$/, '') || '/';
+          if (path === href || path === href + '.html') {
+            links[i].setAttribute('aria-current', 'page');
+          }
+        }
       });
     </script>
   `,
