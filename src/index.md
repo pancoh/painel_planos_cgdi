@@ -4,6 +4,10 @@ toc: false
 ---
 
 ```js
+document.querySelector('.site-nav a[href="/"]')?.setAttribute('aria-current', 'page');
+```
+
+```js
 import {html} from "htl";
 import {metricGrid} from "./components/cards.js";
 import {brazilCoverageMap} from "./components/brazil-map.js";

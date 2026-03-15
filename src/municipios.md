@@ -4,6 +4,10 @@ toc: false
 ---
 
 ```js
+document.querySelector('.site-nav a[href="/municipios"]')?.setAttribute('aria-current', 'page');
+```
+
+```js
 import {createMunicipioExplorer} from "./components/municipio-explorer.js";
 
 // Carrega os 27 arquivos por UF em paralelo — mesmos bytes, mas aproveitando

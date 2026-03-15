@@ -4,6 +4,10 @@ toc: false
 ---
 
 ```js
+document.querySelector('.site-nav a[href="/regioes"]')?.setAttribute('aria-current', 'page');
+```
+
+```js
 import {metricGrid} from "./components/cards.js";
 import {createRegionExplorer} from "./components/region-explorer.js";
 import {formatNumber, formatPercent} from "./lib/formatters.js";

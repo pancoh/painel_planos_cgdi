@@ -4,6 +4,10 @@ toc: false
 ---
 
 ```js
+document.querySelector('.site-nav a[href="/estados"]')?.setAttribute('aria-current', 'page');
+```
+
+```js
 import {html} from "htl";
 import {metricGrid} from "./components/cards.js";
 import {createStateExplorer} from "./components/state-explorer.js";
