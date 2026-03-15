@@ -1971,12 +1971,12 @@ body {
     }
     .footer-content {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: center;
+        text-align: center;
         gap: 1rem;
     }
     .footer-logo {
         height: 40px;
-        align-self: flex-end;
-        object-position: right center;
+        object-position: center;
     }
 }
