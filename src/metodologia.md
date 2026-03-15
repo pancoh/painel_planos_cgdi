@@ -41,7 +41,7 @@ const snapshots = await FileAttachment("data/processed/snapshots.json").json();
 
 ## Base legal da obrigatoriedade
 
-O painel adota como referência a Lei nº 12.587, de 3 de janeiro de 2012, com redação dada pela Lei nº 14.000, de 2020. Conforme o art. 24, § 1º, ficam obrigados a elaborar e a aprovar Plano de Mobilidade Urbana os municípios:
+O painel adota como referência a [Lei nº 12.587, de 3 de janeiro de 2012](https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/lei/l12587.htm), com redação dada pela Lei nº 14.000, de 2020. Conforme o art. 24, § 1º, ficam obrigados a elaborar e a aprovar Plano de Mobilidade Urbana os municípios:
 
 1. com mais de 20 mil habitantes;
 2. integrantes de regiões metropolitanas, RIDE e aglomerações urbanas com população total superior a 1 milhão de habitantes;
