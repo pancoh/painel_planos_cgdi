@@ -21,13 +21,35 @@ export default {
     <link rel="icon" href="/favicon.png" type="image/png">
     <link rel="apple-touch-icon" href="/favicon.png">
     <link rel="stylesheet" href="/theme.css">
+    <script>
+      (function() {
+        var norm = function(p) { return p === '/' ? '/' : p.replace(/\/$/, ''); };
+        var activePath = norm(window.location.pathname);
+        function markActive() {
+          var nav = document.querySelector('.site-nav');
+          if (!nav) return false;
+          nav.querySelectorAll('a').forEach(function(a) {
+            var href = norm(a.getAttribute('href'));
+            if (activePath === href || activePath === href + '.html') {
+              a.setAttribute('aria-current', 'page');
+            }
+          });
+          return true;
+        }
+        if (!markActive()) {
+          var obs = new MutationObserver(function(_, o) {
+            if (markActive()) o.disconnect();
+          });
+          obs.observe(document.documentElement, {childList: true, subtree: true});
+        }
+      })();
+    </script>
   `,
   header: `
     <div class="site-shell">
       <div class="site-topbar">
         <div class="brand-lockup">
           <a class="brand-home" href="/" aria-label="Página inicial do Painel de Planos de Mobilidade Urbana">
-            <img class="brand-logo" src="/logos/logo_mcid.png" alt="Logo do Ministério das Cidades">
             <div class="brand-text">
               <span class="brand-kicker">Ministério das Cidades</span>
               <span class="brand-title">Planos de Mobilidade Urbana</span>
@@ -46,8 +68,13 @@ export default {
   footer: `
     <div class="site-shell footer-shell">
       <hr class="page-note-divider" style="margin-top:0">
-      <p>Painel para acompanhamento da situação dos Planos de Mobilidade Urbana no Brasil.</p>
-      <p>Fonte: Secretaria Nacional de Mobilidade Urbana</p>
+      <div class="footer-content">
+        <div class="footer-info">
+          <p>Painel para acompanhamento da situação dos Planos de Mobilidade Urbana no Brasil.</p>
+          <p>Fonte: Secretaria Nacional de Mobilidade Urbana</p>
+        </div>
+        <img class="footer-logo" src="/logos/logo_mcid.png" alt="Logo do Ministério das Cidades">
+      </div>
     </div>
   `,
 };
