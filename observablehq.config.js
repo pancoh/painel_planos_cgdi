@@ -21,6 +21,13 @@ export default {
     <link rel="icon" href="/favicon.png" type="image/png">
     <link rel="apple-touch-icon" href="/favicon.png">
     <link rel="stylesheet" href="/theme.css">
+    <script type="module">
+      const norm = (p) => (p.replace(/\/$/, '') || '/').replace(/\/index(\.html)?$/, '') || '/';
+      const active = norm(location.pathname);
+      document.querySelectorAll('.site-nav a').forEach(a => {
+        if (norm(a.getAttribute('href')) === active) a.setAttribute('aria-current', 'page');
+      });
+    </script>
   `,
   header: `
     <div class="site-shell">
@@ -41,22 +48,6 @@ export default {
         </nav>
       </div>
     </div>
-    <script>
-      (function() {
-        var norm = function(p) {
-          p = p.replace(/\/$/, '') || '/';
-          p = p.replace(/\/index(\.html)?$/, '') || '/';
-          return p;
-        };
-        var activePath = norm(window.location.pathname);
-        document.querySelector('.site-nav').querySelectorAll('a').forEach(function(a) {
-          var href = norm(a.getAttribute('href'));
-          if (activePath === href || activePath === href + '.html') {
-            a.setAttribute('aria-current', 'page');
-          }
-        });
-      })();
-    </script>
   `,
   footer: `
     <div class="site-shell footer-shell">
