@@ -1976,6 +1976,7 @@ body {
     }
     .footer-logo {
         height: 40px;
-        object-position: left center;
+        align-self: flex-end;
+        object-position: right center;
     }
 }
