@@ -191,7 +191,7 @@ const dashboardLayout = html`<section class="dashboard-hero">
         <div class="section-heading">
           <div>
             <h2>Obrigados e planos aprovados</h2>
-            <p>Entre os municípios obrigados, quantos já possuem plano aprovado.</p>
+            <p>Entre os <a href="./obrigados">municípios obrigados</a>, quantos já possuem plano aprovado.</p>
           </div>
         </div>
         ${approvedBar}
@@ -200,7 +200,7 @@ const dashboardLayout = html`<section class="dashboard-hero">
         <div class="section-heading">
           <div>
             <h2>Cobertura por região</h2>
-            <p>Ranking do percentual de municípios obrigados com plano aprovado.</p>
+            <p>Ranking do percentual de <a href="./obrigados">municípios obrigados</a> com plano aprovado.</p>
           </div>
         </div>
         ${regionCard}
@@ -211,7 +211,7 @@ const dashboardLayout = html`<section class="dashboard-hero">
         <div class="section-heading">
           <div>
             <h2>Mapa por unidade da federação</h2>
-            <p>O mapa destaca, por UF, quantos municípios obrigados pela <a href="https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/lei/l12587.htm" target="_blank" rel="noopener">Lei nº 12.587/2012</a> já possuem plano aprovado.</p>
+            <p>O mapa destaca, por UF, quantos <a href="./obrigados">municípios obrigados</a> pela <a href="https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/lei/l12587.htm" target="_blank" rel="noopener">Lei nº 12.587/2012</a> já possuem plano aprovado.</p>
           </div>
         </div>
         ${brazilCoverageMap(latestStates, estadosGeo, fetchMunicipiosByUf, fetchGeoByState)}
@@ -230,4 +230,4 @@ display(dashboardLayout)
 
 <p class="page-note">Os dados utilizados neste painel estão disponíveis para download na aba <a href="/municipios">Municípios</a>, onde pode ser exportada a relação completa dos municípios com a situação de elaboração dos Planos de Mobilidade Urbana, assim como a <a href="./obrigados">lista dos municípios obrigados</a>, nos termos da <a href="https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/lei/l12587.htm" target="_blank" rel="noopener">Lei Federal nº 12.587/2012</a>.</p>
 
-<p class="page-note">Ressalta-se que as informações apresentadas são de responsabilidade das prefeituras. O Ministério das Cidades (MCID) não realiza avaliação do conteúdo dos Planos de Mobilidade Urbana informados.</p>
+<p class="page-note" style="font-style:italic;opacity:0.85"><strong>Nota:</strong> As informações apresentadas são de responsabilidade das prefeituras. O Ministério das Cidades (MCID) não realiza avaliação do conteúdo dos Planos de Mobilidade Urbana informados.</p>
