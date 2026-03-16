@@ -39,3 +39,27 @@ export function csvEscape(value) {
   const text = String(value ?? "");
   return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 }
+
+export function slug(value) {
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+export function csvBlob(rows) {
+  if (!rows.length) {
+    return new Blob(["\ufeff"], {type: "text/csv;charset=utf-8"});
+  }
+  const headers = Object.keys(rows[0]);
+  const lines = [
+    headers.join(";"),
+    ...rows.map((row) => headers.map((header) => {
+      const normalized = String(row[header] ?? "").replaceAll('"', '""');
+      return /[;"\n]/.test(normalized) ? `"${normalized}"` : normalized;
+    }).join(";"))
+  ];
+  return new Blob([`\ufeff${lines.join("\n")}`], {type: "text/csv;charset=utf-8"});
+}

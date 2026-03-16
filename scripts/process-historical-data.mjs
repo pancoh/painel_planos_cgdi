@@ -655,7 +655,61 @@ function formatCsvValue(column, value) {
   return String(value);
 }
 
-main().catch((error) => {
+async function processObrigados() {
+  const obrigadosDir = path.join(INPUT_DIR, "Arquivo_obrigatoriedade");
+  const files = await fs.readdir(obrigadosDir).catch(() => []);
+  const xlsxFile = files.find((f) => f.endsWith(".xlsx"));
+  if (!xlsxFile) {
+    console.warn("⚠  Arquivo de obrigatoriedade não encontrado — pulando.");
+    return;
+  }
+  const wb = xlsx.readFile(path.join(obrigadosDir, xlsxFile));
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const raw = xlsx.utils.sheet_to_json(ws, { header: 1 });
+
+  let headerIdx = -1;
+  for (let i = 0; i < Math.min(10, raw.length); i++) {
+    if ((raw[i] || []).some((c) => String(c).includes("Código do Município"))) {
+      headerIdx = i;
+      break;
+    }
+  }
+  if (headerIdx < 0) {
+    console.warn("⚠  Header do arquivo de obrigatoriedade não encontrado — pulando.");
+    return;
+  }
+
+  const rows = [];
+  for (let i = headerIdx + 1; i < raw.length; i++) {
+    const r = raw[i];
+    if (!r || !r[0]) continue;
+    const codigo = String(r[0]).trim();
+    if (!/^\d+$/.test(codigo)) continue;
+    const regiaoSigla = String(r[1] || "").trim();
+    rows.push({
+      codigo_ibge: codigo,
+      regiao: REGION_LABELS[regiaoSigla] || regiaoSigla,
+      uf: String(r[2] || "").trim(),
+      municipio: String(r[3] || "").trim(),
+      rm_ride_au: String(r[4] || "").trim(),
+      populacao_censo_2022: Number(r[5]) || 0,
+      criterio_obrigatoriedade: String(r[6] || "").trim(),
+    });
+  }
+  await fs.writeFile(
+    path.join(OUTPUT_DIR, "obrigados.json"),
+    JSON.stringify(rows),
+    "utf8",
+  );
+  console.log(`✓ obrigados.json — ${rows.length} municípios obrigados`);
+}
+
+async function run() {
+  await main();
+  await processObrigados();
+}
+
+run().catch((error) => {
   console.error(error);
   process.exitCode = 1;
 });

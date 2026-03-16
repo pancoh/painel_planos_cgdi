@@ -178,7 +178,7 @@ const dashboardLayout = html`<section class="dashboard-hero">
     <div class="section-heading">
       <div>
         <h2>Resumo Nacional</h2>
-        <p>Municípios obrigados a elaborar e aprovar plano, conforme a <a href="https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/lei/l12587.htm" target="_blank" rel="noopener">Lei nº 12.587/2012</a>.</p>
+        <p>Municípios <a href="./obrigados">obrigados</a> a elaborar e aprovar plano, conforme a <a href="https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/lei/l12587.htm" target="_blank" rel="noopener">Lei nº 12.587/2012</a>.</p>
       </div>
     </div>
     <div class="summary-strip__grid">
@@ -228,6 +228,6 @@ display(dashboardLayout)
 
 <p class="page-note">No painel acima, é possível visualizar a situação de elaboração e aprovação dos Planos de Mobilidade Urbana nos municípios brasileiros, bem como o recorte populacional dos municípios com mais de 250 mil habitantes e daqueles com até 250 mil habitantes, considerando a obrigatoriedade de elaboração e aprovação do plano, nos termos do § 1º do art. 24 da Política Nacional de Mobilidade Urbana (PNMU) e com base nos dados publicados pelo Instituto Brasileiro de Geografia e Estatística (IBGE).</p>
 
-<p class="page-note">Os dados utilizados neste painel estão disponíveis para download na aba <a href="/municipios">Municípios</a>, onde pode ser exportada a relação completa dos municípios com a situação de elaboração dos Planos de Mobilidade Urbana, assim como a lista dos municípios obrigados, nos termos da <a href="https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/lei/l12587.htm" target="_blank" rel="noopener">Lei Federal nº 12.587/2012</a>.</p>
+<p class="page-note">Os dados utilizados neste painel estão disponíveis para download na aba <a href="/municipios">Municípios</a>, onde pode ser exportada a relação completa dos municípios com a situação de elaboração dos Planos de Mobilidade Urbana, assim como a <a href="./obrigados">lista dos municípios obrigados</a>, nos termos da <a href="https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/lei/l12587.htm" target="_blank" rel="noopener">Lei Federal nº 12.587/2012</a>.</p>
 
 <p class="page-note">Ressalta-se que as informações apresentadas são de responsabilidade das prefeituras. O Ministério das Cidades (MCID) não realiza avaliação do conteúdo dos Planos de Mobilidade Urbana informados.</p>
