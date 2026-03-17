@@ -48,7 +48,7 @@ export default {
       (() => {
         const currentNavPath = resolveCurrentNavPath(location.pathname);
         document.querySelectorAll(".site-nav a").forEach(a => {
-          const href = new URL(a.getAttribute("href"), location.origin).pathname.replace(/\\/$/, "") || "/";
+          const href = new URL(a.getAttribute("href"), location.href).pathname.replace(/\\/$/, "") || "/";
           if (href === currentNavPath) a.setAttribute("aria-current", "page");
         });
       })();
