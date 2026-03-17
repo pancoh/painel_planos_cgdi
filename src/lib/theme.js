@@ -1,3 +1,5 @@
+import {STATUS_COLORS} from "./constants.js";
+
 export const PALETTE = {
   ink: "#1f2937",
   blue: "#356c8c",
@@ -5,18 +7,12 @@ export const PALETTE = {
   green: "#0f766e",
   greenDeep: "#124842",
   greenSoft: "#d7ebe7",
+  red: "#b42318",
   gold: "#b45309",
   goldSoft: "#f3e2c8",
   sand: "#f7f7f4",
   border: "#d3d8df",
   surface: "#ffffff",
   muted: "#5b6470",
-  statuses: {
-    "Plano aprovado": "#0f766e",
-    "Possui plano": "#3f9388",
-    "Em elaboração": "#c99700",
-    "Sem plano": "#8a94a3",
-    "Sem resposta": "#5b6470",
-    "Sem ofício": "#d3d8df",
-  },
+  statuses: STATUS_COLORS,
 };

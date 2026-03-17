@@ -1,37 +1,10 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import {UF_CODES} from "../src/lib/constants.js";
 
 const ROOT = process.cwd();
 const OUTPUT_DIR = path.join(ROOT, "src", "estado");
-const UFS = [
-  "ac",
-  "al",
-  "am",
-  "ap",
-  "ba",
-  "ce",
-  "df",
-  "es",
-  "go",
-  "ma",
-  "mg",
-  "ms",
-  "mt",
-  "pa",
-  "pb",
-  "pe",
-  "pi",
-  "pr",
-  "rj",
-  "rn",
-  "ro",
-  "rr",
-  "rs",
-  "sc",
-  "se",
-  "sp",
-  "to"
-];
+const UFS = UF_CODES.map((uf) => uf.toLowerCase());
 
 await fs.mkdir(OUTPUT_DIR, {recursive: true});
 

@@ -74,9 +74,6 @@ Encerrados esses prazos, os municípios sem plano aprovado ficam sujeitos à res
     </thead>
     <tbody>
       <tr><td>`metadata.json`</td><td>Metadados do processamento e resumo mais recente.</td></tr>
-      <tr><td>`brasil-series.json`</td><td>Série histórica agregada do Brasil.</td></tr>
-      <tr><td>`regioes-series.json`</td><td>Série histórica por região.</td></tr>
-      <tr><td>`ufs-series.json`</td><td>Série histórica por UF.</td></tr>
       <tr><td>`latest-ufs.json`</td><td>Resumo estadual da última referência.</td></tr>
       <tr><td>`latest-municipios.csv`</td><td>Base municipal mais recente para consulta e download.</td></tr>
     </tbody>

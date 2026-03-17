@@ -4,17 +4,9 @@ const percentFormatter = new Intl.NumberFormat("pt-BR", {
   minimumFractionDigits: 1,
   maximumFractionDigits: 1
 });
-const compactFormatter = new Intl.NumberFormat("pt-BR", {
-  notation: "compact",
-  maximumFractionDigits: 1
-});
 
 export function formatNumber(value) {
   return numberFormatter.format(value ?? 0);
-}
-
-export function formatCompact(value) {
-  return compactFormatter.format(value ?? 0);
 }
 
 export function formatPercent(value) {

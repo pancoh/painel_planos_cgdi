@@ -2,6 +2,26 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import xlsx from "xlsx";
 import { csvEscape } from "../src/lib/formatters.js";
+import { STATUS_CATEGORIES, LEGAL_DEADLINES, POP_THRESHOLD } from "../src/lib/constants.js";
+import {
+  MONTHS,
+  REGION_ORDER,
+  REGION_LABELS,
+  STATE_NAMES,
+  COLUMN_ALIASES,
+  normalizeHeader,
+  slugify,
+  cleanText,
+  toNumber,
+  padIbge,
+  normalizeDate,
+  classifyYesNoField,
+  classifyResponseField,
+  classifyElaborationField,
+  classifyObligation,
+  inferEstimateYear,
+  classifyPopulationBand,
+} from "./process-data-utils.mjs";
 
 const ROOT = process.cwd();
 const INPUT_DIR = path.join(
@@ -10,109 +30,25 @@ const INPUT_DIR = path.join(
 );
 const OUTPUT_DIR = path.join(ROOT, "src", "data", "processed");
 
-const MONTHS = {
-  jan: 1,
-  fev: 2,
-  mar: 3,
-  abr: 4,
-  mai: 5,
-  jun: 6,
-  jul: 7,
-  ago: 8,
-  set: 9,
-  out: 10,
-  nov: 11,
-  dez: 12,
-};
-
-const REGION_ORDER = ["Norte", "Nordeste", "Centro-Oeste", "Sudeste", "Sul"];
 const CSV_PT_BR_NUMBER_COLUMNS = new Set([
   "populacao_censo_2010",
   "populacao_censo_2022",
   "estimativa_populacional",
 ]);
 const CSV_NUMBER_FORMATTER = new Intl.NumberFormat("pt-BR");
-const REGION_LABELS = {
-  N: "Norte",
-  NE: "Nordeste",
-  CO: "Centro-Oeste",
-  SE: "Sudeste",
-  S: "Sul",
-};
-
-const STATE_NAMES = {
-  AC: "Acre",
-  AL: "Alagoas",
-  AM: "Amazonas",
-  AP: "Amapá",
-  BA: "Bahia",
-  CE: "Ceará",
-  DF: "Distrito Federal",
-  ES: "Espírito Santo",
-  GO: "Goiás",
-  MA: "Maranhão",
-  MG: "Minas Gerais",
-  MS: "Mato Grosso do Sul",
-  MT: "Mato Grosso",
-  PA: "Pará",
-  PB: "Paraíba",
-  PE: "Pernambuco",
-  PI: "Piauí",
-  PR: "Paraná",
-  RJ: "Rio de Janeiro",
-  RN: "Rio Grande do Norte",
-  RO: "Rondônia",
-  RR: "Roraima",
-  RS: "Rio Grande do Sul",
-  SC: "Santa Catarina",
-  SE: "Sergipe",
-  SP: "São Paulo",
-  TO: "Tocantins",
-};
-
-const COLUMN_ALIASES = new Map(
-  Object.entries({
-    codigo_ibge: "codigo_ibge",
-    regiao: "regiao",
-    uf: "uf",
-    municipio: "municipio",
-    populacao_censo_2010: "populacao_censo_2010",
-    populacao_censo_2022: "populacao_censo_2022",
-    estimativa_populacional_2024: "estimativa_populacional",
-    estimativa_populacional_2025: "estimativa_populacional",
-    faixa_populacional_censo: "faixa_populacional_2010",
-    faixa_populacional_censo_2010: "faixa_populacional_2010",
-    faixa_populacional_censo_2022: "faixa_populacional_2022",
-    faixa_populacional_2024: "faixa_populacional_estimativa",
-    faixa_populacional_2025: "faixa_populacional_estimativa",
-    respondeu_ao_levantamento: "respondeu_ao_levantamento",
-    possui_plano_de_mobilidade_urbana: "possui_plano_mobilidade",
-    aprovado_em_lei_ou_ato_normativo: "aprovado_lei",
-    elaborando_plano: "elaborando_plano",
-    instrumento_legal: "instrumento_legal",
-    n_da_lei: "numero_da_lei",
-    data_da_lei: "data_da_lei",
-    ano_de_elaboracao: "ano_elaboracao",
-    oficio: "oficio",
-    data_da_resposta: "data_resposta",
-    fonte_da_resposta: "fonte_resposta",
-    repondido_por_qual_instrumento: "instrumento_resposta",
-    obrigados_estimativa_2024: "obrigados_estimativa",
-    obrigados_estimativa_2025: "obrigados_estimativa",
-    obrigados_censo_2022_antigo: "obrigados_censo_2022_antigo",
-    obrigados_censo_2022_atualizado: "obrigados_censo_2022_atualizado",
-    ride_rm_au_ibge_2021: "recorte_metropolitano",
-    ride_rm_au_ibge_2023: "recorte_metropolitano_secundario",
-    ride_rm_au_ibge_2024: "recorte_metropolitano",
-    enmu: "enmu",
-    mapa_do_turismo_brasileiro_2022: "mapa_turismo_2022",
-    mapa_do_turismo_brasileiro_2024: "mapa_turismo_2024",
-    tipologia_pndu: "tipologia_pndu",
-  }),
-);
+const GENERATED_STATIC_FILES = new Set([
+  "metadata.json",
+  "snapshots.json",
+  "historico-municipios.json",
+  "latest-regioes.json",
+  "latest-ufs.json",
+  "latest-municipios.csv",
+  "obrigados.json",
+]);
 
 async function main() {
   await fs.mkdir(OUTPUT_DIR, { recursive: true });
+  await cleanupProcessedArtifacts();
   const files = (await fs.readdir(INPUT_DIR))
     .filter((file) => file.endsWith(".xlsx"))
     .map((file) => ({
@@ -160,12 +96,6 @@ async function main() {
     (row) => row.reference_date === latestDate,
   );
 
-  const brazilSeries = buildTimeSeries(historyRows, ["reference_date"]);
-  const regionSeries = buildTimeSeries(historyRows, [
-    "reference_date",
-    "regiao",
-  ]);
-  const ufSeries = buildTimeSeries(historyRows, ["reference_date", "uf"]);
   const latestRegions = summarizeGroups(latestRows, "regiao");
   const latestStates = summarizeGroups(latestRows, "uf");
   const latestMunicipios = latestRows.map((row) => ({
@@ -183,12 +113,8 @@ async function main() {
   await writeJson("metadata.json", metadata);
   await writeJson("snapshots.json", snapshots);
   await writeJson("historico-municipios.json", historyRows);
-  await writeJson("brasil-series.json", brazilSeries);
-  await writeJson("regioes-series.json", regionSeries);
-  await writeJson("ufs-series.json", ufSeries);
   await writeJson("latest-regioes.json", latestRegions);
   await writeJson("latest-ufs.json", latestStates);
-  await writeJson("latest-municipios.json", latestMunicipios);
   await writeCsv("latest-municipios.csv", latestMunicipios);
 
   // Partition by UF for lazy loading on the Brazil map
@@ -295,6 +221,7 @@ function normalizeRow(rawRow, fileInfo) {
   row.obrigado = obrigado;
   row.porte_populacional =
     row.faixa_populacional_2022 ||
+    row.faixa_populacional_estimativa ||
     row.faixa_populacional_2010 ||
     classifyPopulationBand(
       row.populacao_censo_2022 ??
@@ -307,120 +234,6 @@ function normalizeRow(rawRow, fileInfo) {
   return row;
 }
 
-function normalizeHeader(header) {
-  return slugify(String(header ?? ""));
-}
-
-function slugify(value) {
-  return String(value ?? "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "");
-}
-
-function cleanText(value) {
-  if (value == null) return null;
-  const text = String(value).trim();
-  return text === "" ? null : text;
-}
-
-function toNumber(value) {
-  if (value == null || value === "") return null;
-  const text = String(value).trim();
-  let normalizedText = text;
-
-  // Values like 932,748 in source spreadsheets represent thousands, not decimals.
-  if (/^\d{1,3}(,\d{3})+$/.test(text)) {
-    normalizedText = text.replace(/,/g, "");
-  } else if (/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(text)) {
-    normalizedText = text.replace(/\./g, "").replace(",", ".");
-  } else if (/^\d+,\d+$/.test(text)) {
-    const [, fraction = ""] = text.split(",");
-    normalizedText =
-      fraction.length === 3 ? text.replace(/,/g, "") : text.replace(",", ".");
-  } else {
-    normalizedText = text.replace(/\./g, "").replace(",", ".");
-  }
-
-  const normalized = Number(normalizedText);
-  return Number.isFinite(normalized) ? normalized : null;
-}
-
-function padIbge(value) {
-  if (value == null || value === "") return null;
-  const digits = String(value).replace(/\D/g, "");
-  return digits.padStart(7, "0");
-}
-
-function normalizeDate(value) {
-  if (!value) return null;
-  if (value instanceof Date && !Number.isNaN(value.getTime())) {
-    return value.toISOString().slice(0, 10);
-  }
-  const text = String(value).trim();
-  // DD/MM/YYYY (formato brasileiro)
-  const matchBR = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (matchBR) {
-    const [, day, month, year] = matchBR;
-    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
-  }
-  // M/D/YY ou M/D/YYYY (formato exportado pelo Excel como texto)
-  const matchUS = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
-  if (matchUS) {
-    const [, month, day, yr] = matchUS;
-    const year = yr.length === 2 ? `20${yr}` : yr;
-    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
-  }
-  return text;
-}
-
-function classifyYesNoField(value) {
-  const key = slugify(value);
-  if (!key) return null;
-  if (["sim", "s"].includes(key)) return "Sim";
-  if (
-    [
-      "nao",
-      "nao_possui_plano",
-      "nao_respondeu",
-      "nao_foi_enviado_oficio",
-    ].includes(key)
-  ) {
-    if (key === "nao_respondeu") return "Não respondeu";
-    if (key === "nao_foi_enviado_oficio") return "Não foi enviado ofício";
-    if (key === "nao_possui_plano") return "Não possui plano";
-    return "Não";
-  }
-  if (key === "em_revisao") return "Em revisão";
-  return cleanText(value);
-}
-
-function classifyResponseField(value) {
-  const key = slugify(value);
-  if (key === "sim") return "Respondeu";
-  if (key === "nao") return "Não respondeu";
-  if (key === "nao_foi_enviado_oficio") return "Não foi enviado ofício";
-  return null;
-}
-
-function classifyElaborationField(value) {
-  const key = slugify(value);
-  if (key === "sim") return "Sim";
-  if (key === "em_revisao") return "Em revisão";
-  if (key === "nao") return "Não";
-  if (key === "nao_respondeu") return "Não respondeu";
-  if (key === "nao_foi_enviado_oficio") return "Não foi enviado ofício";
-  return cleanText(value);
-}
-
-function classifyObligation(canonical) {
-  return (
-    classifyYesNoField(canonical.obrigados_censo_2022_atualizado) === "Sim"
-  );
-}
-
 function deriveStatus(row) {
   if (row.respondeu_ao_levantamento === "Não foi enviado ofício")
     return "Sem ofício";
@@ -430,24 +243,6 @@ function deriveStatus(row) {
   if (row.elaborando_plano === "Sim" || row.elaborando_plano === "Em revisão")
     return "Em elaboração";
   return "Sem plano";
-}
-
-function inferEstimateYear(rawRow) {
-  const headers = Object.keys(rawRow).map(normalizeHeader);
-  if (headers.includes("estimativa_populacional_2025")) return 2025;
-  if (headers.includes("estimativa_populacional_2024")) return 2024;
-  return null;
-}
-
-function classifyPopulationBand(value) {
-  if (!Number.isFinite(value)) return null;
-  if (value >= 1_000_000) return "Mais de 1 milhão";
-  if (value >=   500_000) return "De 500 mil a 1 milhão";
-  if (value >=   250_000) return "De 250 mil a 500 mil";
-  if (value >=   100_000) return "De 100 a 250 mil";
-  if (value >=    60_000) return "De 60 a 100 mil";
-  if (value >=    20_000) return "De 20 a 60 mil";
-  return "Até 20 mil";
 }
 
 function summarize(rows) {
@@ -518,32 +313,6 @@ function summarizeGroups(rows, key) {
   return summary;
 }
 
-function buildTimeSeries(rows, keys) {
-  const groups = new Map();
-  for (const row of rows) {
-    const key = keys.map((name) => row[name] ?? "").join("|");
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key).push(row);
-  }
-  const series = [];
-  for (const groupRows of groups.values()) {
-    const base = Object.fromEntries(
-      keys.map((name) => [name, groupRows[0][name]]),
-    );
-    series.push({
-      ...base,
-      ...summarize(groupRows),
-    });
-  }
-  return series.sort((a, b) => {
-    const left = `${a.reference_date}|${a.regiao ?? ""}|${a.uf ?? ""}`;
-    const right = `${b.reference_date}|${b.regiao ?? ""}|${b.uf ?? ""}`;
-    return left.localeCompare(right);
-  });
-}
-
-const POP_THRESHOLD = 250_000;
-
 function approvalByPopulation(rows) {
   const getPopulation = (row) => row.populacao_censo_2022 ?? row.estimativa_populacional ?? 0;
   const obrigados = rows.filter((row) => row.obrigado);
@@ -606,18 +375,8 @@ function buildMetadata({
       uf: row.uf,
       estado_nome: row.estado_nome,
     })),
-    status_categories: [
-      "Plano aprovado",
-      "Possui plano",
-      "Em elaboração",
-      "Sem plano",
-      "Sem resposta",
-      "Sem ofício",
-    ],
-    legal_deadlines: [
-      { reference_date: "2024-04-12", label: "+ 250 mil habitantes" },
-      { reference_date: "2025-04-12", label: "Até 250 mil habitantes" },
-    ],
+    status_categories: STATUS_CATEGORIES,
+    legal_deadlines: LEGAL_DEADLINES,
     approval_by_population: approvalByPopulation(latestRows),
   };
 }
@@ -627,6 +386,24 @@ async function writeJson(fileName, data) {
     path.join(OUTPUT_DIR, fileName),
     `${JSON.stringify(data, null, 2)}\n`,
     "utf8",
+  );
+}
+
+async function cleanupProcessedArtifacts() {
+  const files = await fs.readdir(OUTPUT_DIR, {withFileTypes: true});
+  const removableGeneratedPattern = /^(brasil-series|regioes-series|ufs-series|latest-municipios|metadata|snapshots|historico-municipios|latest-regioes|latest-ufs|obrigados)\.(json|csv)$/;
+  const removablePartitionPattern = /^municipios-uf-[a-z]{2}\.json$/;
+
+  await Promise.all(
+    files
+      .filter((entry) => entry.isFile())
+      .map((entry) => entry.name)
+      .filter((name) => name !== ".gitkeep")
+      .filter((name) =>
+        removablePartitionPattern.test(name) ||
+        (removableGeneratedPattern.test(name) && !GENERATED_STATIC_FILES.has(name)),
+      )
+      .map((name) => fs.unlink(path.join(OUTPUT_DIR, name))),
   );
 }
 

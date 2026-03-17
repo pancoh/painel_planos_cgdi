@@ -3,21 +3,15 @@ title: Visão Brasil
 toc: false
 ---
 
-<style>.site-nav a[href="./"] { background: var(--theme-foreground-focus); color: #fff; border-color: transparent; box-shadow: 0 2px 8px rgba(15,118,110,0.28); }</style>
-
 ```js
-import {html} from "htl";
-import {metricGrid} from "./components/cards.js";
-import {brazilCoverageMap} from "./components/brazil-map.js";
-import {formatDate, formatNumber, formatPercent} from "./lib/formatters.js";
+import {createHomeDashboard} from "./components/home-dashboard.js";
+import {createGeoByStateLoader, createMunicipiosByUfJsonLoader} from "./lib/data-loaders.js";
 
 const metadata = await FileAttachment("data/processed/metadata.json").json();
 const latestRegions = await FileAttachment("data/processed/latest-regioes.json").json();
 const latestStates = await FileAttachment("data/processed/latest-ufs.json").json();
 const estadosGeo = await FileAttachment("geo/estados.json").json();
-
-// Dados municipais por UF — carregados sob demanda ao clicar no mapa
-const _ufFiles = {
+const ufAttachments = {
   AC: FileAttachment("data/processed/municipios-uf-ac.json"),
   AL: FileAttachment("data/processed/municipios-uf-al.json"),
   AM: FileAttachment("data/processed/municipios-uf-am.json"),
@@ -46,10 +40,7 @@ const _ufFiles = {
   SP: FileAttachment("data/processed/municipios-uf-sp.json"),
   TO: FileAttachment("data/processed/municipios-uf-to.json"),
 };
-const fetchMunicipiosByUf = (uf) => _ufFiles[uf]?.json() ?? Promise.resolve([]);
-
-// Geometria municipal por código IBGE do estado — carregada sob demanda ao clicar no mapa
-const _geoFiles = {
+const geoAttachments = {
   "11": FileAttachment("geo/municipios-11.json"),
   "12": FileAttachment("geo/municipios-12.json"),
   "13": FileAttachment("geo/municipios-13.json"),
@@ -78,148 +69,16 @@ const _geoFiles = {
   "52": FileAttachment("geo/municipios-52.json"),
   "53": FileAttachment("geo/municipios-53.json"),
 };
-const fetchGeoByState = (codarea) => _geoFiles[String(codarea)]?.json() ?? Promise.resolve({features: []});
-const summary = metadata.latest_summary;
-const previousSummary = metadata.previous_summary;
-const percentualAprovadoDelta = previousSummary
-  ? (summary.percentual_aprovado - previousSummary.percentual_aprovado) * 100
-  : null;
-const percentualAprovadoDeltaText = percentualAprovadoDelta == null || Math.abs(percentualAprovadoDelta) < 0.05
-  ? "Estável"
-  : `${percentualAprovadoDelta > 0 ? "+" : ""}${percentualAprovadoDelta.toLocaleString("pt-BR", {
-      minimumFractionDigits: 1,
-      maximumFractionDigits: 1
-    })} p.p.`;
-const regionOrder = ["Norte", "Nordeste", "Centro-Oeste", "Sudeste", "Sul"];
-const summaryCards = metricGrid([
-  {label: "Municípios", value: formatNumber(summary.total_municipios)},
-  {label: "Obrigados (Censo 2022)", value: formatNumber(summary.total_obrigados)},
-  {
-    label: "Plano aprovado",
-    value: formatNumber(summary.municipios_com_plano_aprovado),
-    delta: metadata.monthly_delta?.municipios_com_plano_aprovado
-  },
-  {
-    label: "Percentual aprovado",
-    value: formatPercent(summary.percentual_aprovado),
-    delta: percentualAprovadoDelta,
-    deltaText: percentualAprovadoDeltaText
-  }
-]);
-const statsAcima  = metadata.approval_by_population.acima_250k;
-const statsAbaixo = metadata.approval_by_population.abaixo_250k;
-const statsTotal  = metadata.approval_by_population.total;
-function approvalGroup(label, stats) {
-  return html`<div class="approval-group">
-    <div class="approval-group__header">
-      ${label}
-    </div>
-    <div class="approval-bar__track" aria-label=${label}>
-      <div class="approval-bar__segment approval-bar__segment--approved"
-           style=${`width:${(stats.aprovados / stats.total) * 100}%`}>
-        <strong>${formatNumber(stats.aprovados)}</strong>
-      </div>
-      <div class="approval-bar__segment approval-bar__segment--pending"
-           style=${`width:${(stats.sem_plano / stats.total) * 100}%`}>
-        <strong>${formatNumber(stats.sem_plano)}</strong>
-      </div>
-    </div>
-    <div class="approval-bar__meta">
-      <span>Total de obrigados: ${formatNumber(stats.total)}</span>
-      <span>Percentual com plano aprovado: <strong>${formatPercent(stats.pct)}</strong></span>
-    </div>
-  </div>`;
-}
-const approvedBar = html`<div class="approval-bar">
-  <div class="approval-bar__legend">
-    <span><i class="swatch swatch-approved"></i>Com plano aprovado</span>
-    <span><i class="swatch swatch-pending"></i>Sem plano aprovado</span>
-  </div>
-  ${approvalGroup("Acima de 250 mil habitantes", statsAcima)}
-  ${approvalGroup("Até 250 mil habitantes", statsAbaixo)}
-  <div class="approval-bar__meta">
-    <span>Total de obrigados: ${formatNumber(statsTotal.total)}</span>
-    <span>Percentual com plano aprovado: <strong>${formatPercent(statsTotal.pct)}</strong></span>
-  </div>
-</div>`;
-const regionRows = [...latestRegions].sort((a, b) => b.percentual_aprovado - a.percentual_aprovado);
-const maxRegionCoverage = Math.max(0.01, ...regionRows.map((row) => row.percentual_aprovado));
-const regionCard = html`<div class="region-ranking">
-  ${regionRows.map((row, index) => html`<div class="region-ranking__row">
-    <div class="region-ranking__header">
-      <div class="region-ranking__label">
-        <span class="region-ranking__position">${index + 1}</span>
-        <strong>${row.regiao}</strong>
-      </div>
-      <span class="region-ranking__value">${formatPercent(row.percentual_aprovado)}</span>
-    </div>
-    <div class="region-ranking__track" aria-hidden="true">
-      <span class="region-ranking__fill" style=${`width:${Math.max(10, (row.percentual_aprovado / maxRegionCoverage) * 100)}%`}></span>
-    </div>
-    <div class="region-ranking__meta">
-      <span>${formatNumber(row.municipios_com_plano_aprovado)} aprovados</span>
-      <span>${formatNumber(row.total_obrigados)} obrigados</span>
-    </div>
-  </div>`)}
-</div>`;
-const dashboardLayout = html`<section class="dashboard-hero">
-  <div class="dashboard-toolbar">
-    <div class="dashboard-toolbar__title">
-      <h1>Situação dos planos de mobilidade urbana</h1>
-      <p>Painel público para acompanhamento.</p>
-    </div>
-    <div class="dashboard-toolbar__side">
-      <div class="dashboard-toolbar__meta">
-        <span><strong>Atualização:</strong> ${formatDate(metadata.last_reference_date)}</span>
-      </div>
-    </div>
-  </div>
-  <div class="card panel-card panel-card--summary-strip">
-    <div class="section-heading">
-      <div>
-        <h2>Resumo Nacional</h2>
-        <p>Municípios <a href="./obrigados">obrigados</a> a elaborar e aprovar plano, conforme a <a href="https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/lei/l12587.htm" target="_blank" rel="noopener">Lei nº 12.587/2012</a>.</p>
-      </div>
-    </div>
-    <div class="summary-strip__grid">
-      ${summaryCards}
-    </div>
-  </div>
-  <div class="dashboard-stage">
-    <aside class="dashboard-sidebar">
-      <div class="card panel-card panel-card--compact">
-        <div class="section-heading">
-          <div>
-            <h2>Obrigados e planos aprovados</h2>
-            <p>Entre os <a href="./obrigados">municípios obrigados</a>, quantos já possuem plano aprovado.</p>
-          </div>
-        </div>
-        ${approvedBar}
-      </div>
-      <div class="card panel-card panel-card--compact">
-        <div class="section-heading">
-          <div>
-            <h2>Cobertura por região</h2>
-            <p>Ranking do percentual de <a href="./obrigados">municípios obrigados</a> com plano aprovado.</p>
-          </div>
-        </div>
-        ${regionCard}
-      </div>
-    </aside>
-    <div class="dashboard-main">
-      <div class="card panel-card panel-card--map">
-        <div class="section-heading">
-          <div>
-            <h2>Mapa por unidade da federação</h2>
-            <p>O mapa destaca, por UF, quantos <a href="./obrigados">municípios obrigados</a> pela <a href="https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/lei/l12587.htm" target="_blank" rel="noopener">Lei nº 12.587/2012</a> já possuem plano aprovado.</p>
-          </div>
-        </div>
-        ${brazilCoverageMap(latestStates, estadosGeo, fetchMunicipiosByUf, fetchGeoByState)}
-      </div>
-    </div>
-  </div>
-</section>`;
-
+const fetchMunicipiosByUf = createMunicipiosByUfJsonLoader(ufAttachments);
+const fetchGeoByState = createGeoByStateLoader(geoAttachments);
+const dashboardLayout = createHomeDashboard({
+  metadata,
+  latestRegions,
+  latestStates,
+  estadosGeo,
+  fetchMunicipiosByUf,
+  fetchGeoByState,
+});
 ```
 
 ```js

@@ -1,24 +1,19 @@
 import * as d3 from "d3";
 import {PALETTE} from "../lib/theme.js";
 import {formatNumber, formatPercent} from "../lib/formatters.js";
-
-const ns = "http://www.w3.org/2000/svg";
-const W = 700;
-const H = 580;
-
-const IBGE_TO_UF = {
-  12: "AC", 27: "AL", 13: "AM", 16: "AP", 29: "BA", 23: "CE", 53: "DF",
-  32: "ES", 52: "GO", 21: "MA", 31: "MG", 50: "MS", 51: "MT", 15: "PA",
-  25: "PB", 26: "PE", 22: "PI", 41: "PR", 33: "RJ", 24: "RN", 11: "RO",
-  14: "RR", 43: "RS", 42: "SC", 28: "SE", 35: "SP", 17: "TO",
-};
-
-function municipioColor(d) {
-  if (!d) return "#d1d5db";
-  if (d.status_painel === "Plano aprovado") return "#0f766e";
-  if (d.obrigado) return "#b42318";
-  return "#d1d5db";
-}
+import {
+  ns,
+  W,
+  H,
+  TOOLTIP_HEIGHT_STATE,
+  IBGE_TO_UF,
+  createTooltip,
+  positionTooltip,
+  createLegend,
+  applyStateSelection,
+  resetStateSelection,
+  renderMunicipioLayer,
+} from "./brazil-map-ui.js";
 
 // statesGeo: GeoJSON FeatureCollection with all 27 states (passed from index.md)
 // fetchMunicipiosByUf: async (uf: string) => municipality rows[] — called on state click
@@ -48,26 +43,7 @@ export function brazilCoverageMap(rows, statesGeo, fetchMunicipiosByUf, fetchGeo
   const canvas = document.createElement("div");
   canvas.className = "map-canvas";
 
-  const tooltip = document.createElement("div");
-  tooltip.className = "map-tooltip";
-  tooltip.hidden = true;
-
-  // ── Tooltip DOM (pre-created; only textContent updated in hot path) ────────
-  const ttHeader = document.createElement("strong");
-  const ttLines = Array.from({length: 4}, () => {
-    const s = document.createElement("span");
-    s.hidden = true;
-    return s;
-  });
-  tooltip.append(ttHeader, ...ttLines);
-
-  function setTooltip(header, lines) {
-    ttHeader.textContent = header;
-    ttLines.forEach((s, i) => {
-      if (i < lines.length) { s.textContent = lines[i]; s.hidden = false; }
-      else { s.hidden = true; }
-    });
-  }
+  const tooltip = createTooltip();
 
   // ── SVG ────────────────────────────────────────────────────────────────────
   const svg = document.createElementNS(ns, "svg");
@@ -129,61 +105,12 @@ export function brazilCoverageMap(rows, statesGeo, fetchMunicipiosByUf, fetchGeo
       .call(zoom.transform, d3.zoomIdentity);
   }
 
-  function loadMunicipios(geoData, munIndex) {
-    munisLayer.innerHTML = "";
-    for (const feature of geoData.features ?? []) {
-      const munCode = feature.properties?.codarea;
-      const munData = munIndex.get(munCode);
-      const path = document.createElementNS(ns, "path");
-      path.setAttribute("d", pathGen(feature) ?? "");
-      path.setAttribute("fill", municipioColor(munData));
-      path.setAttribute("stroke", "white");
-      path.setAttribute("stroke-width", "0.5");
-
-      path.addEventListener("mousemove", (event) => {
-        tooltip.hidden = false;
-        if (munData) {
-          setTooltip(munData.municipio, [
-            munData.obrigado ? "Obrigatório" : "Não obrigatório",
-            munData.status_painel,
-          ]);
-        } else {
-          setTooltip(munCode ?? "—", []);
-        }
-        const bounds = wrapper.getBoundingClientRect();
-        const tw = 205, th = 80, offset = 18;
-        tooltip.style.left = `${Math.min(Math.max(12, event.clientX - bounds.left + offset), bounds.width - tw - 12)}px`;
-        tooltip.style.top = `${Math.min(Math.max(12, event.clientY - bounds.top + offset), bounds.height - th - 12)}px`;
-      });
-
-      path.addEventListener("mouseleave", () => {
-        tooltip.hidden = true;
-      });
-
-      munisLayer.append(path);
-    }
-  }
-
   async function handleStateClick(feature) {
     const codarea = feature.properties?.codarea;
     const uf = IBGE_TO_UF[Number(codarea)];
     selectedState = {codarea, uf};
-
-    for (const p of statesLayer.querySelectorAll("path")) {
-      const pUf = IBGE_TO_UF[Number(p.dataset.codarea)];
-      const isSelected = pUf === uf;
-      const data = values.get(pUf);
-      p.setAttribute(
-        "fill",
-        isSelected
-          ? (data ? color(data.municipios_com_plano_aprovado) : PALETTE.blueSoft)
-          : "#d1d5db"
-      );
-      p.setAttribute("pointer-events", "none");
-      p.style.cursor = "default";
-    }
-
-    tooltip.hidden = true;
+    applyStateSelection(statesLayer, values, uf, color);
+    tooltip.hide();
     backBtn.style.display = "";
     legend.style.display = "none";
     legendMunis.style.display = "";
@@ -196,7 +123,7 @@ export function brazilCoverageMap(rows, statesGeo, fetchMunicipiosByUf, fetchGeo
     // Guard: ignore if user navigated to another state while loading
     if (selectedState?.uf !== uf) return;
     const munIndex = new Map(munData.map((m) => [m.codigo_ibge, m]));
-    loadMunicipios(geoData, munIndex);
+    renderMunicipioLayer({geoData, munIndex, munisLayer, pathGen, tooltip, wrapper});
   }
 
   function handleBack() {
@@ -206,13 +133,7 @@ export function brazilCoverageMap(rows, statesGeo, fetchMunicipiosByUf, fetchGeo
     legend.style.display = "";
     legendMunis.style.display = "none";
     resetZoom();
-    for (const p of statesLayer.querySelectorAll("path")) {
-      const uf = IBGE_TO_UF[Number(p.dataset.codarea)];
-      const data = values.get(uf);
-      p.setAttribute("fill", data ? color(data.municipios_com_plano_aprovado) : PALETTE.blueSoft);
-      p.setAttribute("pointer-events", "auto");
-      p.style.cursor = "pointer";
-    }
+    resetStateSelection(statesLayer, values, color);
   }
 
   backBtn.addEventListener("click", handleBack);
@@ -227,33 +148,27 @@ export function brazilCoverageMap(rows, statesGeo, fetchMunicipiosByUf, fetchGeo
     path.setAttribute("d", pathGen(feature) ?? "");
     path.setAttribute("class", "state-shape");
     path.setAttribute("fill", data ? color(data.municipios_com_plano_aprovado) : PALETTE.blueSoft);
-    path.setAttribute("stroke", "#fbfaf6");
+    path.setAttribute("stroke", PALETTE.sand);
     path.setAttribute("stroke-width", "1.5");
     path.style.cursor = "pointer";
     path.dataset.codarea = codarea;
 
     path.addEventListener("mousemove", (event) => {
       if (selectedState) return;
-      tooltip.hidden = false;
       if (data) {
-        setTooltip(`${data.estado_nome} (${data.uf})`, [
+        tooltip.show(`${data.estado_nome} (${data.uf})`, [
           `Obrigados: ${formatNumber(data.total_obrigados)}`,
           `Plano aprovado: ${formatNumber(data.municipios_com_plano_aprovado)}`,
           `Sem plano aprovado: ${formatNumber(data.total_obrigados - data.municipios_com_plano_aprovado)}`,
           `Percentual aprovado: ${formatPercent(data.percentual_aprovado)}`,
         ]);
       } else {
-        setTooltip(uf ?? codarea, []);
+        tooltip.show(uf ?? codarea, []);
       }
-      const bounds = wrapper.getBoundingClientRect();
-      const tw = 205, th = 122, offset = 18;
-      tooltip.style.left = `${Math.min(Math.max(12, event.clientX - bounds.left + offset), bounds.width - tw - 12)}px`;
-      tooltip.style.top = `${Math.min(Math.max(12, event.clientY - bounds.top + offset), bounds.height - th - 12)}px`;
+      positionTooltip(tooltip.element, wrapper, event, TOOLTIP_HEIGHT_STATE);
     });
 
-    path.addEventListener("mouseleave", () => {
-      tooltip.hidden = true;
-    });
+    path.addEventListener("mouseleave", tooltip.hide);
 
     path.addEventListener("click", () => {
       if (!selectedState) handleStateClick(feature);
@@ -263,51 +178,24 @@ export function brazilCoverageMap(rows, statesGeo, fetchMunicipiosByUf, fetchGeo
   }
 
   // ── Legends ────────────────────────────────────────────────────────────────
-  const legend = document.createElement("div");
-  legend.className = "map-legend";
-  const legendHeader = document.createElement("div");
-  legendHeader.className = "map-legend__header";
-  const legendLabel = document.createElement("span");
-  legendLabel.className = "map-legend__label";
-  legendLabel.textContent = "Leitura principal";
-  const legendSwatches = document.createElement("div");
-  legendSwatches.className = "map-legend__swatches";
-  const swatchApproved = document.createElement("span");
-  const iApproved = document.createElement("i");
-  iApproved.className = "swatch swatch-approved";
-  swatchApproved.append(iApproved, "Mais planos aprovados");
-  const swatchNeutral = document.createElement("span");
-  const iNeutral = document.createElement("i");
-  iNeutral.className = "swatch swatch-neutral";
-  swatchNeutral.append(iNeutral, "Menos planos aprovados");
-  legendSwatches.append(swatchApproved, swatchNeutral);
-  legendHeader.append(legendLabel, legendSwatches);
-  const legendNote = document.createElement("p");
-  legendNote.className = "map-note";
-  legendNote.textContent = "Passe o cursor sobre a UF para ver detalhes. Clique para ampliar e ver os municípios.";
-  legend.append(legendHeader, legendNote);
-
-  const legendMunis = document.createElement("div");
-  legendMunis.className = "map-legend";
+  const legend = createLegend({
+    label: "Leitura principal",
+    items: [
+      {className: "swatch swatch-approved", text: "Mais planos aprovados"},
+      {className: "swatch swatch-neutral", text: "Menos planos aprovados"},
+    ],
+    note: "Passe o cursor sobre a UF para ver detalhes. Clique para ampliar e ver os municípios.",
+  });
+  const legendMunis = createLegend({
+    label: "Situação dos municípios",
+    items: [
+      {color: PALETTE.green, text: "Plano aprovado"},
+      {color: PALETTE.red, text: "Obrigado sem plano"},
+      {color: PALETTE.border, text: "Demais"},
+    ],
+  });
   legendMunis.style.display = "none";
-  const legendMunisHeader = document.createElement("div");
-  legendMunisHeader.className = "map-legend__header";
-  const legendMunisLabel = document.createElement("span");
-  legendMunisLabel.className = "map-legend__label";
-  legendMunisLabel.textContent = "Situação dos municípios";
-  const legendMunisSwatches = document.createElement("div");
-  legendMunisSwatches.className = "map-legend__swatches";
-  for (const [color, text] of [["#0f766e", "Plano aprovado"], ["#b42318", "Obrigado sem plano"], ["#d1d5db", "Demais"]]) {
-    const span = document.createElement("span");
-    const i = document.createElement("i");
-    i.className = "swatch";
-    i.style.background = color;
-    span.append(i, text);
-    legendMunisSwatches.append(span);
-  }
-  legendMunisHeader.append(legendMunisLabel, legendMunisSwatches);
-  legendMunis.append(legendMunisHeader);
 
-  wrapper.append(backBtn, legend, legendMunis, canvas, tooltip);
+  wrapper.append(backBtn, legend, legendMunis, canvas, tooltip.element);
   return wrapper;
 }

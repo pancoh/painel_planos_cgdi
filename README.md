@@ -61,13 +61,9 @@ Todos os arquivos abaixo são **reconstruídos por `npm run data`** e não são 
 |---------|---------------|-----------|
 | `src/data/processed/metadata.json` | ~5 KB | Resumo nacional, deltas mensais, deadlines legais, barra de aprovação por população |
 | `src/data/processed/snapshots.json` | ~3 KB | Lista de snapshots com datas e contagens |
-| `src/data/processed/latest-municipios.json` | ~8,5 MB | Todos os 5.571 municípios no snapshot mais recente |
 | `src/data/processed/municipios-uf-{uf}.json` | ~22–963 KB | Mesmo dado partido por UF (27 arquivos) — usado no mapa e nas páginas estaduais |
 | `src/data/processed/latest-regioes.json` | ~3 KB | Agregados por região (snapshot atual) |
 | `src/data/processed/latest-ufs.json` | ~15 KB | Agregados por UF (snapshot atual) |
-| `src/data/processed/brasil-series.json` | ~7 KB | Série histórica nacional |
-| `src/data/processed/regioes-series.json` | ~37 KB | Série histórica por região |
-| `src/data/processed/ufs-series.json` | ~190 KB | Série histórica por UF |
 | `src/data/processed/latest-municipios.csv` | ~2,3 MB | Export CSV do snapshot atual |
 | `src/data/processed/historico-municipios.json` | ~107 MB | Todos os registros históricos (13 snapshots × 5.571 municípios) |
 | `src/estado/{uf}.md` | ~1 KB × 27 | Páginas de detalhe por estado |
@@ -93,7 +89,7 @@ O painel usa dois indicadores de progresso distintos:
 | Métrica | Campo | Definição |
 |---------|-------|-----------|
 | **% aprovado** | `percentual_aprovado` | Municípios obrigados com **plano aprovado em lei** ÷ total de obrigados. Métrica principal do painel. |
-| **Cobertura** | `percentual_cobertura` | Municípios obrigados com **qualquer plano** (aprovado + "possui plano") ÷ total de obrigados. Métrica secundária, usada nos gráficos de evolução histórica. |
+| **Cobertura** | `percentual_cobertura` | Municípios obrigados com **qualquer plano** (aprovado + "possui plano") ÷ total de obrigados. Métrica derivada mantida nos agregados para leitura complementar. |
 
 **Obrigatoriedade** é determinada pelo campo oficial `Obrigados Censo 2022 - atualizado`, conforme relação publicada para fins de acompanhamento federal (Lei nº 12.587/2012, §1º do art. 24, com redação dada pela Lei nº 14.000/2020). Os critérios legais incluem municípios com mais de 20 mil habitantes, integrantes de regiões metropolitanas/RIDEs com população total superior a 1 milhão de habitantes, e integrantes de áreas de interesse turístico. O pipeline não re-implementa esses critérios — lê o campo diretamente da planilha de levantamento.
 

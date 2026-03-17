@@ -1,4 +1,5 @@
 import {metricGrid} from "./cards.js";
+import {labelWrap, sectionHeading} from "./dom-utils.js";
 import {formatNumber, formatPercent} from "../lib/formatters.js";
 import {createMunicipioExplorer} from "./municipio-explorer.js";
 
@@ -6,16 +7,6 @@ export function createStateExplorer(states, fetchMunicipiosByUf) {
   const root = document.createElement("section");
   root.className = "state-explorer";
   let currentUf = states[0]?.uf;
-
-  const heading = document.createElement("div");
-  heading.className = "section-heading";
-  const headingInner = document.createElement("div");
-  const headingH2 = document.createElement("h2");
-  headingH2.textContent = "Leitura por estado";
-  const headingP = document.createElement("p");
-  headingP.textContent = "Resumo estadual, distribuição por status e consulta municipal.";
-  headingInner.append(headingH2, headingP);
-  heading.append(headingInner);
 
   const controls = document.createElement("div");
   controls.className = "table-controls";
@@ -31,7 +22,12 @@ export function createStateExplorer(states, fetchMunicipiosByUf) {
   const metricsHost = document.createElement("div");
   const explorerHost = document.createElement("div");
 
-  root.append(heading, controls, metricsHost, explorerHost);
+  root.append(
+    sectionHeading("Leitura por estado", "Resumo estadual e consulta municipal."),
+    controls,
+    metricsHost,
+    explorerHost,
+  );
   select.addEventListener("change", () => {
     currentUf = select.value;
     update();
@@ -48,7 +44,7 @@ export function createStateExplorer(states, fetchMunicipiosByUf) {
         {label: "Obrigados", value: formatNumber(state.total_obrigados)},
         {label: "Possui plano", value: formatNumber(state.municipios_com_plano)},
         {label: "Planos aprovados", value: formatNumber(state.municipios_com_plano_aprovado)},
-        {label: "% aprovado", value: formatPercent(state.percentual_aprovado), tone: "accent"}
+        {label: "% aprovado", value: formatPercent(state.percentual_aprovado)}
       ])
     );
     const loading = document.createElement("p");
@@ -66,13 +62,4 @@ export function createStateExplorer(states, fetchMunicipiosByUf) {
       })
     );
   }
-}
-
-function labelWrap(label, input) {
-  const wrap = document.createElement("label");
-  wrap.className = "control";
-  const text = document.createElement("span");
-  text.textContent = label;
-  wrap.append(text, input);
-  return wrap;
 }

@@ -1,4 +1,5 @@
 import { formatNumber, csvEscape } from "../lib/formatters.js";
+import { sectionHeading } from "./dom-utils.js";
 
 const PAGE_SIZE = 200;
 
@@ -28,15 +29,7 @@ export function createMunicipioExplorer(rows, options = {}) {
   const root = document.createElement("section");
   root.className = "table-shell";
 
-  const heading = document.createElement("div");
-  heading.className = "section-heading";
-  const headingInner = document.createElement("div");
-  const headingH2 = document.createElement("h2");
-  headingH2.textContent = title;
-  const headingP = document.createElement("p");
-  headingP.textContent = "Busca, filtros e exportação da visão selecionada.";
-  headingInner.append(headingH2, headingP);
-  heading.append(headingInner);
+  const heading = sectionHeading(title, "Busca, filtros e exportação da visão selecionada.");
 
   const controls = document.createElement("div");
   controls.className = "table-controls";

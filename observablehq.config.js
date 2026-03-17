@@ -1,3 +1,5 @@
+import {resolveCurrentNavPath} from "./src/lib/navigation.js";
+
 export default {
   title: "Painel de Planos de Mobilidade Urbana",
   root: "src",
@@ -41,6 +43,16 @@ export default {
         </nav>
       </div>
     </div>
+    <script>
+      const resolveCurrentNavPath = ${resolveCurrentNavPath.toString()};
+      (() => {
+        const currentNavPath = resolveCurrentNavPath(location.pathname);
+        document.querySelectorAll(".site-nav a").forEach(a => {
+          const href = new URL(a.getAttribute("href"), location.origin).pathname.replace(/\\/$/, "") || "/";
+          if (href === currentNavPath) a.setAttribute("aria-current", "page");
+        });
+      })();
+    </script>
   `,
   footer: `
     <div class="site-shell footer-shell">

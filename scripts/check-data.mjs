@@ -6,6 +6,7 @@
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { parseMunicipiosCsv } from "../src/lib/municipios-data.js";
 
 const OUTPUT_DIR = join(process.cwd(), "src", "data", "processed");
 
@@ -70,11 +71,21 @@ function load(fileName) {
   }
 }
 
+function loadCsv(fileName) {
+  const filePath = join(OUTPUT_DIR, fileName);
+  try {
+    return parseMunicipiosCsv(readFileSync(filePath, "utf-8"));
+  } catch (e) {
+    err(`Não foi possível ler ${fileName}: ${e.message}`);
+    return null;
+  }
+}
+
 // ── 1. Carregar artefatos ──────────────────────────────────────────────────
 console.log("\n[1] Carregando artefatos...");
 const metadata  = load("metadata.json");
 const snapshots = load("snapshots.json");
-const municipios = load("latest-municipios.json");
+const municipios = loadCsv("latest-municipios.csv");
 const ufs        = load("latest-ufs.json");
 
 if (!metadata || !snapshots || !municipios || !ufs) {
@@ -82,7 +93,7 @@ if (!metadata || !snapshots || !municipios || !ufs) {
   process.exitCode = 1;
   process.exit();
 }
-ok(`metadata.json, snapshots.json, latest-municipios.json, latest-ufs.json carregados`);
+ok(`metadata.json, snapshots.json, latest-municipios.csv, latest-ufs.json carregados`);
 
 // ── 2. Contagem de snapshots ───────────────────────────────────────────────
 console.log("\n[2] Verificando snapshots...");
@@ -109,10 +120,10 @@ if (snapshots.length === 0) {
   }
 }
 
-// ── 3. Colunas obrigatórias e contagem em latest-municipios.json ──────────
+// ── 3. Colunas obrigatórias e contagem em latest-municipios.csv ───────────
 console.log("\n[3] Verificando colunas obrigatórias e contagem...");
 if (municipios.length === 0) {
-  err("latest-municipios.json está vazio");
+  err("latest-municipios.csv está vazio");
 } else {
   const sample = municipios[0];
   const missing = EXPECTED_COLUMNS.filter((col) => !(col in sample));

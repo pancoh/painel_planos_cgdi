@@ -1,20 +1,11 @@
 import {metricGrid} from "./cards.js";
+import {labelWrap, sectionHeading} from "./dom-utils.js";
 import {formatNumber, formatPercent} from "../lib/formatters.js";
 
-export function createRegionExplorer(regions, series, states) {
+export function createRegionExplorer(regions, states) {
   const root = document.createElement("section");
   root.className = "region-explorer";
   let current = regions[0]?.regiao;
-
-  const heading = document.createElement("div");
-  heading.className = "section-heading";
-  const headingInner = document.createElement("div");
-  const headingH2 = document.createElement("h2");
-  headingH2.textContent = "Leitura regional";
-  const headingP = document.createElement("p");
-  headingP.textContent = "Comparação territorial e evolução histórica das grandes regiões.";
-  headingInner.append(headingH2, headingP);
-  heading.append(headingInner);
 
   const controls = document.createElement("div");
   controls.className = "table-controls";
@@ -31,7 +22,12 @@ export function createRegionExplorer(regions, series, states) {
   const tableHost = document.createElement("div");
   tableHost.className = "table-wrap";
 
-  root.append(heading, controls, metricsHost, tableHost);
+  root.append(
+    sectionHeading("Leitura regional", "Comparação territorial das grandes regiões."),
+    controls,
+    metricsHost,
+    tableHost,
+  );
   select.addEventListener("change", () => {
     current = select.value;
     update();
@@ -47,7 +43,7 @@ export function createRegionExplorer(regions, series, states) {
         {label: "Municípios obrigados", value: formatNumber(region.total_obrigados)},
         {label: "Possui plano", value: formatNumber(region.municipios_com_plano)},
         {label: "Planos aprovados", value: formatNumber(region.municipios_com_plano_aprovado)},
-        {label: "% aprovado", value: formatPercent(region.percentual_aprovado), tone: "accent"}
+        {label: "% aprovado", value: formatPercent(region.percentual_aprovado)}
       ])
     );
     tableHost.replaceChildren(renderStateTable(regionStates));
@@ -97,13 +93,4 @@ function renderStateTable(rows) {
 
   table.append(thead, tbody);
   return table;
-}
-
-function labelWrap(label, input) {
-  const wrap = document.createElement("label");
-  wrap.className = "control";
-  const text = document.createElement("span");
-  text.textContent = label;
-  wrap.append(text, input);
-  return wrap;
 }
