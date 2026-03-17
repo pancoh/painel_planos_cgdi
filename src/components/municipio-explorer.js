@@ -185,11 +185,14 @@ function updateDownload(anchor, rows) {
     "instrumento_legal",
     "numero_da_lei",
     "data_da_lei",
-    "reference_date",
   ];
   const header = columns.join(",");
   const body = rows
-    .map((row) => columns.map((column) => csvEscape(row[column])).join(","))
+    .map((row) => columns.map((column) => {
+      const value = row[column];
+      if (column === "obrigado") return csvEscape(value ? "Sim" : "Não");
+      return csvEscape(value);
+    }).join(","))
     .join("\n");
   const blob = new Blob([`\uFEFF${header}\n${body}\n`], {
     type: "text/csv;charset=utf-8",

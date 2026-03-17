@@ -1863,6 +1863,20 @@ body {
     border-color: rgba(180, 35, 24, 0.14);
 }
 
+.data-table th:nth-child(4),
+.data-table td:nth-child(4),
+.data-table th:nth-child(7),
+.data-table td:nth-child(7),
+.data-table th:nth-child(8),
+.data-table td:nth-child(8) {
+    text-align: center;
+}
+
+.data-table th:nth-child(6),
+.data-table td:nth-child(6) {
+    text-align: right;
+}
+
 .footer-shell {
     padding-top: 0.5rem;
 }
@@ -1965,11 +1979,14 @@ body {
         align-items: start;
     }
     .table-controls {
-        flex-direction: column;
-        align-items: stretch;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        align-items: end;
     }
-    .control {
-        min-width: 100%;
+    .table-controls > .control:first-child,
+    .table-controls > .control:has(.checkbox-group),
+    .table-controls > .button {
+        grid-column: 1 / -1;
     }
     .hero-copy,
     .hero-aside,

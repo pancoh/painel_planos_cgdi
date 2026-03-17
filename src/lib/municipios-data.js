@@ -1,4 +1,4 @@
-import {autoType, csvParse} from "d3-dsv";
+import {csvParse} from "d3-dsv";
 
 function parseBRNumber(value) {
   if (value == null || value === "") return null;
@@ -16,7 +16,7 @@ function parseDateField(value) {
 }
 
 export function parseMunicipiosCsv(text) {
-  return csvParse(text, autoType).map((row) => ({
+  return csvParse(text).map((row) => ({
     ...row,
     obrigado: toBoolean(row.obrigado),
     cobertura_municipio: toBoolean(row.cobertura_municipio),
