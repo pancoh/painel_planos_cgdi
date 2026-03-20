@@ -12,16 +12,17 @@ export function createHomeDashboard({
   fetchGeoByState,
 }) {
   const summary = metadata.latest_summary;
-  const previousSummary = metadata.previous_summary;
-  const percentualAprovadoDelta = previousSummary
-    ? (summary.percentual_aprovado - previousSummary.percentual_aprovado) * 100
-    : null;
-  const percentualAprovadoDeltaText = percentualAprovadoDelta == null || Math.abs(percentualAprovadoDelta) < 0.05
-    ? "Estável"
-    : `${percentualAprovadoDelta > 0 ? "+" : ""}${percentualAprovadoDelta.toLocaleString("pt-BR", {
-        minimumFractionDigits: 1,
-        maximumFractionDigits: 1,
-      })} p.p.`;
+  // Cálculos de variação mês anterior — desabilitados
+  // const previousSummary = metadata.previous_summary;
+  // const percentualAprovadoDelta = previousSummary
+  //   ? (summary.percentual_aprovado - previousSummary.percentual_aprovado) * 100
+  //   : null;
+  // const percentualAprovadoDeltaText = percentualAprovadoDelta == null || Math.abs(percentualAprovadoDelta) < 0.05
+  //   ? "Estável"
+  //   : `${percentualAprovadoDelta > 0 ? "+" : ""}${percentualAprovadoDelta.toLocaleString("pt-BR", {
+  //       minimumFractionDigits: 1,
+  //       maximumFractionDigits: 1,
+  //     })} p.p.`;
 
   return html`<section class="dashboard-hero">
     <div class="dashboard-toolbar">
@@ -43,7 +44,7 @@ export function createHomeDashboard({
         </div>
       </div>
       <div class="summary-strip__grid">
-        ${createSummaryCards(summary, metadata, percentualAprovadoDelta, percentualAprovadoDeltaText)}
+        ${createSummaryCards(summary)}
       </div>
     </div>
     <div class="dashboard-stage">
@@ -82,20 +83,20 @@ export function createHomeDashboard({
   </section>`;
 }
 
-function createSummaryCards(summary, metadata, percentualAprovadoDelta, percentualAprovadoDeltaText) {
+function createSummaryCards(summary /*, metadata, percentualAprovadoDelta, percentualAprovadoDeltaText */) {
   return metricGrid([
     {label: "Municípios", value: formatNumber(summary.total_municipios)},
     {label: "Obrigados (Censo 2022)", value: formatNumber(summary.total_obrigados)},
     {
       label: "Plano aprovado",
       value: formatNumber(summary.municipios_com_plano_aprovado),
-      delta: metadata.monthly_delta?.municipios_com_plano_aprovado,
+      // delta: metadata.monthly_delta?.municipios_com_plano_aprovado,  // variação mês anterior — desabilitado
     },
     {
       label: "Percentual aprovado",
       value: formatPercent(summary.percentual_aprovado),
-      delta: percentualAprovadoDelta,
-      deltaText: percentualAprovadoDeltaText,
+      // delta: percentualAprovadoDelta,        // variação mês anterior — desabilitado
+      // deltaText: percentualAprovadoDeltaText, // variação mês anterior — desabilitado
     },
   ]);
 }
