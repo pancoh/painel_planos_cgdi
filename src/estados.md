@@ -39,17 +39,22 @@ const rankingCard = html`<div class="state-ranking">
 
 # Estados
 
-${metricGrid([
-  {label: "Unidades da federação", value: formatNumber(latestStates.length)},
-  {
-    label: "Maior % aprovado",
-    value: [...latestStates].sort((a, b) => b.percentual_aprovado - a.percentual_aprovado)[0].uf
-  },
-  {
-    label: "Mais planos aprovados",
-    value: [...latestStates].sort((a, b) => b.municipios_com_plano_aprovado - a.municipios_com_plano_aprovado)[0].uf
-  }
-])}
+${(() => {
+  const regioes = ["Norte", "Nordeste", "Centro-Oeste", "Sudeste", "Sul"];
+  const cards = regioes.map(regiao => {
+    const best = latestStates
+      .filter(d => d.regiao === regiao)
+      .sort((a, b) => b.percentual_aprovado - a.percentual_aprovado)[0];
+    return {
+      label: regiao,
+      value: best.uf,
+      detail: `${best.estado_nome} — ${formatPercent(best.percentual_aprovado)}`
+    };
+  });
+  const grid = metricGrid(cards);
+  grid.style.gridTemplateColumns = "repeat(5, minmax(0, 1fr))";
+  return grid;
+})()}
 
 <div class="card">
   <div class="section-heading">
