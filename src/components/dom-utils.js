@@ -7,7 +7,7 @@ export function labelWrap(label, input) {
   return wrap;
 }
 
-export function sectionHeading(title, description) {
+export function sectionHeading(title, description, side = null) {
   const heading = document.createElement("div");
   heading.className = "section-heading";
   const inner = document.createElement("div");
@@ -17,5 +17,6 @@ export function sectionHeading(title, description) {
   p.textContent = description;
   inner.append(h2, p);
   heading.append(inner);
+  if (side) heading.append(side);
   return heading;
 }

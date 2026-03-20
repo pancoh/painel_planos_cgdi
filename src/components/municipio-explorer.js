@@ -29,7 +29,12 @@ export function createMunicipioExplorer(rows, options = {}) {
   const root = document.createElement("section");
   root.className = "table-shell";
 
-  const heading = sectionHeading(title, "Busca, filtros e exportação da visão selecionada.");
+  const obrigadosLink = document.createElement("a");
+  obrigadosLink.href = "/obrigados";
+  obrigadosLink.textContent = "Lista de municípios obrigados";
+  obrigadosLink.className = "section-heading__link";
+
+  const heading = sectionHeading(title, "Busca, filtros e exportação da visão selecionada.", obrigadosLink);
 
   const controls = document.createElement("div");
   controls.className = "table-controls";

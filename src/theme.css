@@ -753,6 +753,20 @@
     margin-bottom: 0.55rem;
 }
 
+.section-heading__link {
+    flex-shrink: 0;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--theme-foreground-focus);
+    text-decoration: none;
+    white-space: nowrap;
+    padding-bottom: 0.1rem;
+}
+
+.section-heading__link:hover {
+    text-decoration: underline;
+}
+
 .snapshot-card {
     display: grid;
     gap: 0.8rem;
