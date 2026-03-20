@@ -37,6 +37,12 @@ const rankingCard = html`<div class="state-ranking">
 </div>`;
 ```
 
+<style>
+.metrics-grid--regioes { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+@media (max-width: 1100px) { .metrics-grid--regioes { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 720px)  { .metrics-grid--regioes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+</style>
+
 # Estados
 
 ${(() => {
@@ -52,7 +58,7 @@ ${(() => {
     };
   });
   const grid = metricGrid(cards);
-  grid.style.gridTemplateColumns = "repeat(5, minmax(0, 1fr))";
+  grid.classList.add("metrics-grid--regioes");
   return grid;
 })()}
 
