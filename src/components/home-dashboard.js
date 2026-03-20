@@ -40,7 +40,7 @@ export function createHomeDashboard({
       <div class="section-heading">
         <div>
           <h2>Resumo Nacional</h2>
-          <p>Municípios <a href="./obrigados">obrigados</a> a elaborar e aprovar plano, conforme a <a href="https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/lei/l12587.htm" target="_blank" rel="noopener">Lei nº 12.587/2012</a>.</p>
+          <p><a href="./obrigados">Municípios obrigados</a> a elaborar e aprovar plano, conforme a <a href="https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/lei/l12587.htm" target="_blank" rel="noopener">Lei nº 12.587/2012</a>.</p>
         </div>
       </div>
       <div class="summary-strip__grid">
