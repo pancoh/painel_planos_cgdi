@@ -45,6 +45,8 @@ const rankingCard = html`<div class="state-ranking">
 
 # Estados
 
+<p style="color: var(--theme-foreground-muted); margin: 0.25rem 0 0.5rem;">Estado com maior percentual de planos aprovados por região.</p>
+
 ${(() => {
   const regioes = ["Norte", "Nordeste", "Centro-Oeste", "Sudeste", "Sul"];
   const cards = regioes.map(regiao => {
