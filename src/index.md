@@ -171,7 +171,7 @@ const plot = Plot.plot({
     }),
     Plot.text(cumulativeStacked.filter(d => d.grupo === "Acima de 250 mil hab."), {
       x: "ano", y: "y2",
-      text: d => String(d.y2), dy: -8,
+      text: d => String(d.y2), dy: -13,
       fill: PALETTE.ink, fontSize: 11, fontWeight: "600",
     }),
     Plot.ruleY([0]),
