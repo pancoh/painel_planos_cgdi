@@ -111,7 +111,7 @@ export function createApprovalEvolutionChart(series) {
 
   const plotTarget = container.querySelector(".approval-evolution-chart__plot");
   plotTarget.style.position = "relative";
-  plotTarget.style.clipPath = "inset(0 100% 0 0)";
+  plotTarget.style.visibility = "hidden";
   plotTarget.append(tooltip.element);
 
   let currentPlot = null;
@@ -200,6 +200,7 @@ export function createApprovalEvolutionChart(series) {
     if (animated) return;
     animated = true;
 
+    plotTarget.style.visibility = "visible";
     plotTarget.style.clipPath = "inset(0 100% 0 0)";
     requestAnimationFrame(() => {
       plotTarget.getBoundingClientRect(); // força reflow para Android
@@ -219,7 +220,7 @@ export function createApprovalEvolutionChart(series) {
     },
     { threshold: window.innerWidth < 720 ? 0.1 : 0.5 },
   );
-  observer.observe(plotTarget);
+  observer.observe(container);
 
   function onDocumentClick(e) {
     if (!container.contains(e.target)) {
