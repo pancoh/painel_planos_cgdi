@@ -150,13 +150,13 @@ export function createApprovalEvolutionChart(series) {
     const yearRows = rowsByYear.get(year);
     if (!yearRows) { tooltip.hide(); return; }
 
-    const below = yearRows.find((r) => r.grupo === GROUP_BELOW);
-    const above = yearRows.find((r) => r.grupo === GROUP_ABOVE);
-    const total = above?.y2 ?? below?.y2 ?? 0;
+    const belowRow = yearRows.find((r) => r.grupo === GROUP_BELOW);
+    const aboveRow = yearRows.find((r) => r.grupo === GROUP_ABOVE);
+    const total = aboveRow?.y2 ?? belowRow?.y2 ?? 0;
 
     tooltip.show(String(year), [
-      `${GROUP_BELOW}: ${formatNumber(below?.y2 ?? 0)}`,
-      `${GROUP_ABOVE}: ${formatNumber((above?.y2 ?? 0) - (above?.y1 ?? 0))}`,
+      `${GROUP_BELOW}: ${formatNumber(belowRow?.y2 ?? 0)}`,
+      `${GROUP_ABOVE}: ${formatNumber((aboveRow?.y2 ?? 0) - (aboveRow?.y1 ?? 0))}`,
       `Total acumulado: ${formatNumber(total)}`,
     ]);
     if (above) {
