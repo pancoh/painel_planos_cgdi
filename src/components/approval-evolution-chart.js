@@ -109,43 +109,59 @@ export function createApprovalEvolutionChart(series) {
 
   let currentPlot = null;
 
+  function showTooltipAt(clientX, clientY, svg) {
+    const svgRect = svg.getBoundingClientRect();
+    const innerWidth = svgRect.width - 50;
+    if (innerWidth <= 0) return;
+
+    const ratio = (clientX - svgRect.left - 50) / innerWidth;
+    const clamped = Math.max(0, Math.min(1, ratio));
+    const [minYear, maxYear] = [years[0], years[years.length - 1]];
+    const yearEstimate = minYear + clamped * (maxYear - minYear);
+    const year = years.reduce((best, c) =>
+      Math.abs(c - yearEstimate) < Math.abs(best - yearEstimate) ? c : best,
+    );
+
+    const yearRows = rowsByYear.get(year);
+    if (!yearRows) { tooltip.hide(); return; }
+
+    const below = yearRows.find((r) => r.grupo === GROUP_BELOW);
+    const above = yearRows.find((r) => r.grupo === GROUP_ABOVE);
+    const total = above?.y2 ?? below?.y2 ?? 0;
+
+    tooltip.show(String(year), [
+      `${GROUP_BELOW}: ${formatNumber(below?.y2 ?? 0)}`,
+      `${GROUP_ABOVE}: ${formatNumber((above?.y2 ?? 0) - (above?.y1 ?? 0))}`,
+      `Total acumulado: ${formatNumber(total)}`,
+    ]);
+    positionTooltip(tooltip.element, plotTarget, { clientX, clientY }, 90);
+  }
+
   function attachTooltipEvents() {
     const svg = plotTarget.querySelector("svg");
     if (!svg) return;
 
-    svg.addEventListener("mousemove", (event) => {
-      const bounds = plotTarget.getBoundingClientRect();
-      const svgRect = svg.getBoundingClientRect();
-      const marginLeft = 50;
-      const marginRight = 0;
-      const innerWidth = svgRect.width - marginLeft - marginRight;
-      if (innerWidth <= 0) return;
-
-      const ratio = (event.clientX - svgRect.left - marginLeft) / innerWidth;
-      const clamped = Math.max(0, Math.min(1, ratio));
-      const [minYear, maxYear] = [years[0], years[years.length - 1]];
-      const yearEstimate = minYear + clamped * (maxYear - minYear);
-      const year = years.reduce((best, c) =>
-        Math.abs(c - yearEstimate) < Math.abs(best - yearEstimate) ? c : best,
-      );
-
-      const yearRows = rowsByYear.get(year);
-      if (!yearRows) { tooltip.hide(); return; }
-
-      const below = yearRows.find((r) => r.grupo === GROUP_BELOW);
-      const above = yearRows.find((r) => r.grupo === GROUP_ABOVE);
-      const total = above?.y2 ?? below?.y2 ?? 0;
-
-      tooltip.show(String(year), [
-        `${GROUP_BELOW}: ${formatNumber(below?.y2 ?? 0)}`,
-        `${GROUP_ABOVE}: ${formatNumber((above?.y2 ?? 0) - (above?.y1 ?? 0))}`,
-        `Total acumulado: ${formatNumber(total)}`,
-      ]);
-      positionTooltip(tooltip.element, plotTarget, event, 90);
-    });
-
+    svg.addEventListener("mousemove", (e) => showTooltipAt(e.clientX, e.clientY, svg));
     svg.addEventListener("mouseleave", tooltip.hide);
+
+    svg.addEventListener("touchmove", (e) => {
+      e.preventDefault();
+      const t = e.touches[0];
+      showTooltipAt(t.clientX, t.clientY, svg);
+    }, { passive: false });
+
+    svg.addEventListener("touchend", (e) => {
+      const t = e.changedTouches[0];
+      showTooltipAt(t.clientX, t.clientY, svg);
+    });
   }
+
+  function onDocumentClick(e) {
+    if (!container.contains(e.target)) {
+      tooltip.hide();
+    }
+  }
+  document.addEventListener("pointerdown", onDocumentClick);
 
   const ro = new ResizeObserver(([entry]) => {
     const w = Math.floor(entry.contentRect.width);
