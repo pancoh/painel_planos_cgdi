@@ -30,7 +30,7 @@ export function createMunicipioExplorer(rows, options = {}) {
   root.className = "table-shell";
 
   const obrigadosLink = document.createElement("a");
-  obrigadosLink.href = "/obrigados";
+  obrigadosLink.href = "./obrigados";
   obrigadosLink.textContent = "Lista de municípios obrigados";
   obrigadosLink.className = "section-heading__link";
 
