@@ -175,25 +175,38 @@ function createApprovalBar(approvalByPopulation) {
     </div>
   </div>`;
 
-  const observer = new IntersectionObserver(
-    ([entry]) => {
-      if (entry.isIntersecting) {
-        const segments = container.querySelectorAll(".approval-bar__segment");
-        segments.forEach((seg) => seg.getBoundingClientRect()); // força reflow para Android
-        segments.forEach((seg, i) => {
-          seg.style.transition = `width 1.2s ease-in-out ${i * 200}ms`;
-          seg.style.width = seg.dataset.width;
-        });
-        const totalDelay = (segments.length - 1) * 200 + 1200;
-        setTimeout(() => {
-          document.dispatchEvent(new CustomEvent("approval-bar-done"));
-        }, totalDelay);
-        observer.disconnect();
-      }
-    },
-    { threshold: 0.1 },
-  );
-  observer.observe(container);
+  function animateBars() {
+    const segments = container.querySelectorAll(".approval-bar__segment");
+    segments.forEach((seg) => seg.getBoundingClientRect()); // força reflow
+    segments.forEach((seg, i) => {
+      seg.style.transition = `width 1.2s ease-in-out ${i * 200}ms`;
+      seg.style.width = seg.dataset.width;
+    });
+    const totalDelay = (segments.length - 1) * 200 + 1200;
+    setTimeout(() => {
+      document.dispatchEvent(new CustomEvent("approval-bar-done"));
+    }, totalDelay);
+  }
+
+  // Se o elemento já está visível no viewport (ex: tablet com tela grande),
+  // usa double rAF para garantir que width:0% foi pintado antes de animar.
+  // Caso contrário, aguarda scroll via IntersectionObserver.
+  const rect = container.getBoundingClientRect();
+  const alreadyVisible = rect.top < window.innerHeight && rect.bottom > 0;
+  if (alreadyVisible) {
+    requestAnimationFrame(() => requestAnimationFrame(animateBars));
+  } else {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          animateBars();
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 },
+    );
+    observer.observe(container);
+  }
 
   return container;
 }
