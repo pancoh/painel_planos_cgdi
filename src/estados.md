@@ -16,25 +16,43 @@ const fetchMunicipiosByUf = createMunicipiosByUfCsvLoader(
 );
 const stateRows = [...latestStates].sort((a, b) => b.percentual_aprovado - a.percentual_aprovado);
 const maxStateCoverage = Math.max(0.01, ...stateRows.map((row) => row.percentual_aprovado));
-const rankingCard = html`<div class="state-ranking">
-  ${stateRows.map((row, index) => html`<div class="state-ranking__row">
-    <div class="state-ranking__header">
-      <div class="state-ranking__label">
-        <span class="state-ranking__position">${index + 1}</span>
-        <strong>${row.uf}</strong>
-        <span class="state-ranking__name">${row.estado_nome}</span>
+const rankingCard = (() => {
+  const container = html`<div class="state-ranking">
+    ${stateRows.map((row, index) => html`<div class="state-ranking__row">
+      <div class="state-ranking__header">
+        <div class="state-ranking__label">
+          <span class="state-ranking__position">${index + 1}</span>
+          <strong>${row.uf}</strong>
+          <span class="state-ranking__name">${row.estado_nome}</span>
+        </div>
+        <span class="state-ranking__value">${formatPercent(row.percentual_aprovado)}</span>
       </div>
-      <span class="state-ranking__value">${formatPercent(row.percentual_aprovado)}</span>
-    </div>
-    <div class="state-ranking__track" aria-hidden="true">
-      <span class="state-ranking__fill" style=${`width:${Math.max(4, (row.percentual_aprovado / maxStateCoverage) * 100)}%`}></span>
-    </div>
-    <div class="state-ranking__meta">
-      <span>${formatNumber(row.municipios_com_plano_aprovado)} aprovados</span>
-      <span>${formatNumber(row.total_obrigados)} obrigados</span>
-    </div>
-  </div>`)}
-</div>`;
+      <div class="state-ranking__track" aria-hidden="true">
+        <span class="state-ranking__fill" data-width=${`${Math.max(4, (row.percentual_aprovado / maxStateCoverage) * 100)}%`} style="width:0%"></span>
+      </div>
+      <div class="state-ranking__meta">
+        <span>${formatNumber(row.municipios_com_plano_aprovado)} aprovados</span>
+        <span>${formatNumber(row.total_obrigados)} obrigados</span>
+      </div>
+    </div>`)}
+  </div>`;
+
+  const observer = new IntersectionObserver(
+    ([entry]) => {
+      if (entry.isIntersecting) {
+        container.querySelectorAll(".state-ranking__fill").forEach((bar, i) => {
+          bar.style.transition = `width 1.2s ease-in-out ${i * 150}ms`;
+          bar.style.width = bar.dataset.width;
+        });
+        observer.disconnect();
+      }
+    },
+    { threshold: window.innerWidth < 720 ? 0.2 : 0.5 },
+  );
+  observer.observe(container);
+
+  return container;
+})();
 ```
 
 <style>
