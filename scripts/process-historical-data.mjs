@@ -50,13 +50,7 @@ const GENERATED_STATIC_FILES = new Set([
 async function main() {
   await fs.mkdir(OUTPUT_DIR, { recursive: true });
   await cleanupProcessedArtifacts();
-  const files = (await fs.readdir(INPUT_DIR))
-    .filter((file) => file.endsWith(".xlsx"))
-    .map((file) => ({
-      file,
-      ...parseReferenceDate(file),
-    }))
-    .sort((a, b) => a.reference_date.localeCompare(b.reference_date));
+  const files = await collectInputFiles();
 
   const historyRows = [];
   const snapshots = [];
@@ -132,17 +126,31 @@ async function main() {
   }
 }
 
+async function collectInputFiles() {
+  const entries = await fs.readdir(INPUT_DIR);
+  const files = [];
+  for (const file of entries.filter((entry) => entry.endsWith(".xlsx"))) {
+    const reference = parseReferenceDate(file);
+    if (!reference) {
+      console.warn(
+        `Aviso: ignorando arquivo fora do padrao esperado: ${file}`,
+      );
+      continue;
+    }
+    files.push({ file, ...reference });
+  }
+  files.sort((a, b) => a.reference_date.localeCompare(b.reference_date));
+  return files;
+}
+
 function parseReferenceDate(fileName) {
   const match = fileName.match(/_(\d{1,2})([a-z]{3})(\d{4})\.xlsx$/i);
-  if (!match) {
-    throw new Error(
-      `Nao foi possivel extrair a data de referencia de ${fileName}`,
-    );
-  }
+  if (!match) return null;
   const [, dayRaw, monthRaw, yearRaw] = match;
   const day = Number(dayRaw);
   const month = MONTHS[monthRaw.toLowerCase()];
   const year = Number(yearRaw);
+  if (!month || day < 1 || day > 31) return null;
   const reference_date = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
   const reference_label = new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
