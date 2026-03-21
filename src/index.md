@@ -146,7 +146,7 @@ const cumulativeStacked = (() => {
   <div class="section-heading">
     <div>
       <h2>Evolução acumulada dos planos aprovados</h2>
-      <p>Total acumulado de municípios obrigados com plano aprovado, por ano e porte populacional.</p>
+      <p>Total acumulado de <a href="./obrigados">municípios obrigados</a> com plano aprovado, por ano e porte populacional.</p>
     </div>
   </div>
 
