@@ -929,16 +929,12 @@
     border-radius: 999px;
 }
 
-.approval-evolution-chart__canvas {
-    position: relative;
-    overflow: visible;
+.approval-evolution-chart figure[class^="plot-"] {
+    max-width: 100%;
 }
 
-.approval-evolution-chart__svg {
-    display: block;
-    width: 100%;
-    height: auto;
-    overflow: visible;
+.approval-evolution-chart svg text {
+    font-family: var(--font-sans);
 }
 
 .state-ranking {
