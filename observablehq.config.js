@@ -11,24 +11,24 @@ export default {
   search: true,
   globalStylesheets: [],
   pages: [
-    { name: "Brasil", path: "/" },
-    { name: "Regiões", path: "/regioes" },
-    { name: "Estados", path: "/estados" },
-    { name: "Municípios", path: "/municipios" },
+    { name: "Brasil", path: "index" },
+    { name: "Regiões", path: "regioes" },
+    { name: "Estados", path: "estados" },
+    { name: "Municípios", path: "municipios" },
   ],
   head: `
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@500;600;700&display=swap" rel="stylesheet">
-    <link rel="icon" href="/favicon.ico" type="image/x-icon">
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-    <link rel="stylesheet" href="/theme.css">
+    <link rel="icon" href="./favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png">
+    <link rel="stylesheet" href="./theme.css">
   `,
   header: `
     <div class="site-shell">
       <div class="site-topbar">
         <div class="brand-lockup">
-          <a class="brand-home" href="/" aria-label="Página inicial do Painel de Planos de Mobilidade Urbana">
+          <a class="brand-home" href="./" aria-label="Página inicial do Painel de Planos de Mobilidade Urbana">
             <div class="brand-text">
               <span class="brand-kicker">Ministério das Cidades</span>
               <span class="brand-title">Planos de Mobilidade Urbana</span>
@@ -36,10 +36,10 @@ export default {
           </a>
         </div>
         <nav class="site-nav" aria-label="Navegação principal">
-          <a href="/">Brasil</a>
-          <a href="/regioes">Regiões</a>
-          <a href="/estados">Estados</a>
-          <a href="/municipios">Municípios</a>
+          <a href="./">Brasil</a>
+          <a href="./regioes">Regiões</a>
+          <a href="./estados">Estados</a>
+          <a href="./municipios">Municípios</a>
         </nav>
       </div>
     </div>
@@ -62,7 +62,7 @@ export default {
           <p>Painel para acompanhamento da situação dos Planos de Mobilidade Urbana no Brasil.</p>
           <p>Fonte: Secretaria Nacional de Mobilidade Urbana</p>
         </div>
-        <img class="footer-logo" src="/logos/logo_mcid.png" alt="Logo do Ministério das Cidades">
+        <img class="footer-logo" src="./logos/logo_mcid.png" alt="Logo do Ministério das Cidades">
       </div>
     </div>
   `,
