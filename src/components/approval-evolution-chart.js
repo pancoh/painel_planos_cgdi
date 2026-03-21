@@ -8,6 +8,14 @@ const GROUP_ABOVE = "Acima de 250 mil hab.";
 const GROUP_BELOW = "Até 250 mil hab.";
 
 function buildPlot(rows, topSeries, belowSeries, width) {
+  const sparse = width < 520;
+  const visibleYears = new Set(
+    sparse
+      ? topSeries.filter((_, i) => i % 2 === 0).map((r) => r.ano)
+      : topSeries.map((r) => r.ano),
+  );
+  const labelSeries = topSeries.filter((r) => visibleYears.has(r.ano));
+
   return Plot.plot({
     width,
     height: 340,
@@ -22,9 +30,7 @@ function buildPlot(rows, topSeries, belowSeries, width) {
     x: {
       label: null,
       tickFormat: "d",
-      ticks: rows.length > 20
-        ? topSeries.filter((_, i) => i % 2 === 0).map((r) => r.ano)
-        : topSeries.map((r) => r.ano),
+      ticks: [...visibleYears],
     },
     y: {
       label: "↑ Planos aprovados",
@@ -62,7 +68,7 @@ function buildPlot(rows, topSeries, belowSeries, width) {
         strokeWidth: 1.5,
         curve: "monotone-x",
       }),
-      Plot.text(topSeries, {
+      Plot.text(labelSeries, {
         x: "ano",
         y: "y2",
         text: (d) => formatNumber(d.y2),
@@ -74,7 +80,7 @@ function buildPlot(rows, topSeries, belowSeries, width) {
         strokeWidth: 3,
         paintOrder: "stroke fill",
       }),
-      Plot.dot(topSeries, {
+      Plot.dot(labelSeries, {
         x: "ano",
         y: "y2",
         r: 2.5,
@@ -109,7 +115,26 @@ export function createApprovalEvolutionChart(series) {
 
   let currentPlot = null;
 
-  function showTooltipAt(clientX, clientY, svg) {
+  const TOOLTIP_HEIGHT = 90;
+  const TOOLTIP_OFFSET = 18;
+  const TOOLTIP_MARGIN = 12;
+  const TOOLTIP_WIDTH = 205;
+
+  function positionTooltipAbove(el, wrapper, clientX, clientY) {
+    const bounds = wrapper.getBoundingClientRect();
+    const left = Math.min(
+      Math.max(TOOLTIP_MARGIN, clientX - bounds.left - TOOLTIP_WIDTH / 2),
+      bounds.width - TOOLTIP_WIDTH - TOOLTIP_MARGIN,
+    );
+    const top = Math.max(
+      TOOLTIP_MARGIN,
+      clientY - bounds.top - TOOLTIP_HEIGHT - TOOLTIP_OFFSET,
+    );
+    el.style.left = `${left}px`;
+    el.style.top = `${top}px`;
+  }
+
+  function showTooltipAt(clientX, clientY, svg, above = false) {
     const svgRect = svg.getBoundingClientRect();
     const innerWidth = svgRect.width - 50;
     if (innerWidth <= 0) return;
@@ -134,7 +159,11 @@ export function createApprovalEvolutionChart(series) {
       `${GROUP_ABOVE}: ${formatNumber((above?.y2 ?? 0) - (above?.y1 ?? 0))}`,
       `Total acumulado: ${formatNumber(total)}`,
     ]);
-    positionTooltip(tooltip.element, plotTarget, { clientX, clientY }, 90);
+    if (above) {
+      positionTooltipAbove(tooltip.element, plotTarget, clientX, clientY);
+    } else {
+      positionTooltip(tooltip.element, plotTarget, { clientX, clientY }, TOOLTIP_HEIGHT);
+    }
   }
 
   function attachTooltipEvents() {
@@ -147,12 +176,12 @@ export function createApprovalEvolutionChart(series) {
     svg.addEventListener("touchmove", (e) => {
       e.preventDefault();
       const t = e.touches[0];
-      showTooltipAt(t.clientX, t.clientY, svg);
+      showTooltipAt(t.clientX, t.clientY, svg, true);
     }, { passive: false });
 
     svg.addEventListener("touchend", (e) => {
       const t = e.changedTouches[0];
-      showTooltipAt(t.clientX, t.clientY, svg);
+      showTooltipAt(t.clientX, t.clientY, svg, true);
     });
   }
 
