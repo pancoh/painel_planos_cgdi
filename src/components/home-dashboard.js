@@ -159,7 +159,7 @@ function createApprovalBar(approvalByPopulation) {
   const statsAbaixo = approvalByPopulation.abaixo_250k;
   const statsTotal = approvalByPopulation.total;
 
-  return html`<div class="approval-bar">
+  const container = html`<div class="approval-bar">
     <div class="approval-bar__legend">
       <span><i class="swatch swatch-approved"></i>Com plano aprovado</span>
       <span><i class="swatch swatch-pending"></i>Sem plano aprovado</span>
@@ -174,6 +174,27 @@ function createApprovalBar(approvalByPopulation) {
       >
     </div>
   </div>`;
+
+  const observer = new IntersectionObserver(
+    ([entry]) => {
+      if (entry.isIntersecting) {
+        const segments = container.querySelectorAll(".approval-bar__segment");
+        segments.forEach((seg, i) => {
+          seg.style.transition = `width 1.2s ease-in-out ${i * 200}ms`;
+          seg.style.width = seg.dataset.width;
+        });
+        const totalDelay = (segments.length - 1) * 200 + 1200;
+        setTimeout(() => {
+          document.dispatchEvent(new CustomEvent("approval-bar-done"));
+        }, totalDelay);
+        observer.disconnect();
+      }
+    },
+    { threshold: window.innerWidth < 720 ? 0.2 : 0.5 },
+  );
+  observer.observe(container);
+
+  return container;
 }
 
 function approvalGroup(label, stats) {
@@ -186,13 +207,15 @@ function approvalGroup(label, stats) {
     <div class="approval-bar__track" aria-label=${label}>
       <div
         class="approval-bar__segment approval-bar__segment--approved"
-        style=${`width:${approvedWidth}%`}
+        data-width=${`${approvedWidth}%`}
+        style="width:0%"
       >
         <strong>${formatNumber(stats.aprovados)}</strong>
       </div>
       <div
         class="approval-bar__segment approval-bar__segment--pending"
-        style=${`width:${pendingWidth}%`}
+        data-width=${`${pendingWidth}%`}
+        style="width:0%"
       >
         <strong>${formatNumber(stats.sem_plano)}</strong>
       </div>
@@ -216,7 +239,7 @@ function createRegionRankingCard(latestRegions) {
     ...regionRows.map((row) => row.percentual_aprovado),
   );
 
-  return html`<div class="region-ranking">
+  const container = html`<div class="region-ranking">
     ${regionRows.map(
       (row, index) =>
         html`<div class="region-ranking__row">
@@ -232,7 +255,8 @@ function createRegionRankingCard(latestRegions) {
           <div class="region-ranking__track" aria-hidden="true">
             <span
               class="region-ranking__fill"
-              style=${`width:${Math.max(10, (row.percentual_aprovado / maxRegionCoverage) * 100)}%`}
+              data-width=${`${Math.max(10, (row.percentual_aprovado / maxRegionCoverage) * 100)}%`}
+              style="width:0%"
             ></span>
           </div>
           <div class="region-ranking__meta">
@@ -245,4 +269,13 @@ function createRegionRankingCard(latestRegions) {
         </div>`,
     )}
   </div>`;
+
+  document.addEventListener("approval-bar-done", () => {
+    container.querySelectorAll(".region-ranking__fill").forEach((bar, i) => {
+      bar.style.transition = `width 1.2s ease-in-out ${i * 150}ms`;
+      bar.style.width = bar.dataset.width;
+    });
+  }, { once: true });
+
+  return container;
 }

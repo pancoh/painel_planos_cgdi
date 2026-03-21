@@ -193,6 +193,30 @@ export function createApprovalEvolutionChart(series) {
     });
   }
 
+  let animated = false;
+
+  function animateChart() {
+    if (animated) return;
+    animated = true;
+
+    plotTarget.style.clipPath = "inset(0 100% 0 0)";
+    requestAnimationFrame(() => {
+      plotTarget.style.transition = "clip-path 3s ease-in-out";
+      plotTarget.style.clipPath = "inset(0 0% 0 0)";
+    });
+  }
+
+  const observer = new IntersectionObserver(
+    ([entry]) => {
+      if (entry.isIntersecting) {
+        animateChart();
+        observer.disconnect();
+      }
+    },
+    { threshold: 0.5 },
+  );
+  observer.observe(plotTarget);
+
   function onDocumentClick(e) {
     if (!container.contains(e.target)) {
       tooltip.hide();
