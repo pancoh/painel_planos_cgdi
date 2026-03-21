@@ -43,6 +43,7 @@ const GENERATED_STATIC_FILES = new Set([
   "latest-regioes.json",
   "latest-ufs.json",
   "latest-municipios.csv",
+  "evolucao-aprovados.json",
   "obrigados.json",
 ]);
 
@@ -116,6 +117,9 @@ async function main() {
   await writeJson("latest-regioes.json", latestRegions);
   await writeJson("latest-ufs.json", latestStates);
   await writeCsv("latest-municipios.csv", latestMunicipios);
+
+  // Pre-computed cumulative approval series by population band (for home chart)
+  await writeJson("evolucao-aprovados.json", buildCumulativeApprovalSeries(latestMunicipios));
 
   // Partition by UF for lazy loading on the Brazil map
   const byUf = new Map();
@@ -330,6 +334,42 @@ function approvalByPopulation(rows) {
   };
 }
 
+function buildCumulativeApprovalSeries(rows) {
+  const aprovados = rows.filter(
+    (d) => d.ano_elaboracao && d.aprovado_lei === "Sim" && d.obrigado,
+  );
+  const isAcima = (d) => {
+    const pop = d.populacao_censo_2022 ?? d.estimativa_populacional ?? 0;
+    return pop >= POP_THRESHOLD;
+  };
+  const anos = [...new Set(aprovados.map((d) => Number(d.ano_elaboracao)))].sort(
+    (a, b) => a - b,
+  );
+  // Count per year per group
+  const countByYear = (filter) => {
+    const map = new Map();
+    for (const d of aprovados.filter(filter)) {
+      const ano = Number(d.ano_elaboracao);
+      map.set(ano, (map.get(ano) ?? 0) + 1);
+    }
+    return map;
+  };
+  const acimaByYear = countByYear(isAcima);
+  const abaixoByYear = countByYear((d) => !isAcima(d));
+  // Build cumulative stacked data
+  let cumAbaixo = 0;
+  let cumAcima = 0;
+  return anos.flatMap((ano) => {
+    cumAbaixo += abaixoByYear.get(ano) ?? 0;
+    cumAcima += acimaByYear.get(ano) ?? 0;
+    const total = cumAbaixo + cumAcima;
+    return [
+      { ano, grupo: "Até 250 mil hab.", y1: 0, y2: cumAbaixo, total },
+      { ano, grupo: "Acima de 250 mil hab.", y1: cumAbaixo, y2: total, total },
+    ];
+  });
+}
+
 function buildMetadata({
   snapshots,
   latestRows,
@@ -391,7 +431,7 @@ async function writeJson(fileName, data) {
 
 async function cleanupProcessedArtifacts() {
   const files = await fs.readdir(OUTPUT_DIR, {withFileTypes: true});
-  const removableGeneratedPattern = /^(brasil-series|regioes-series|ufs-series|latest-municipios|metadata|snapshots|historico-municipios|latest-regioes|latest-ufs|obrigados)\.(json|csv)$/;
+  const removableGeneratedPattern = /^(brasil-series|regioes-series|ufs-series|latest-municipios|metadata|snapshots|historico-municipios|latest-regioes|latest-ufs|evolucao-aprovados|obrigados)\.(json|csv)$/;
   const removablePartitionPattern = /^municipios-uf-[a-z]{2}\.json$/;
 
   await Promise.all(

@@ -15,22 +15,31 @@ function parseDateField(value) {
   return str;
 }
 
+function emptyToNull(value) {
+  return value === "" ? null : value;
+}
+
 export function parseMunicipiosCsv(text) {
-  return csvParse(text).map((row) => ({
-    ...row,
-    obrigado: toBoolean(row.obrigado),
-    cobertura_municipio: toBoolean(row.cobertura_municipio),
-    codigo_ibge: row.codigo_ibge ? String(row.codigo_ibge).padStart(7, "0") : null,
-    uf: row.uf ?? null,
-    regiao: row.regiao ?? null,
-    municipio: row.municipio ?? null,
-    status_painel: row.status_painel ?? null,
-    porte_populacional: row.porte_populacional ?? null,
-    populacao_censo_2010: parseBRNumber(row.populacao_censo_2010),
-    populacao_censo_2022: parseBRNumber(row.populacao_censo_2022),
-    estimativa_populacional: parseBRNumber(row.estimativa_populacional),
-    data_da_lei: parseDateField(row.data_da_lei),
-  }));
+  return csvParse(text).map((raw) => {
+    const row = Object.fromEntries(
+      Object.entries(raw).map(([k, v]) => [k, emptyToNull(v)])
+    );
+    return {
+      ...row,
+      obrigado: toBoolean(row.obrigado),
+      cobertura_municipio: toBoolean(row.cobertura_municipio),
+      codigo_ibge: row.codigo_ibge ? String(row.codigo_ibge).padStart(7, "0") : null,
+      uf: row.uf ?? null,
+      regiao: row.regiao ?? null,
+      municipio: row.municipio ?? null,
+      status_painel: row.status_painel ?? null,
+      porte_populacional: row.porte_populacional ?? null,
+      populacao_censo_2010: parseBRNumber(row.populacao_censo_2010),
+      populacao_censo_2022: parseBRNumber(row.populacao_censo_2022),
+      estimativa_populacional: parseBRNumber(row.estimativa_populacional),
+      data_da_lei: parseDateField(row.data_da_lei),
+    };
+  });
 }
 
 function toBoolean(value) {
