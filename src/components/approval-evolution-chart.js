@@ -170,8 +170,15 @@ export function createApprovalEvolutionChart(series) {
     const svg = plotTarget.querySelector("svg");
     if (!svg) return;
 
-    svg.addEventListener("mousemove", (e) => showTooltipAt(e.clientX, e.clientY, svg));
+    let touchActive = false;
+
+    svg.addEventListener("mousemove", (e) => {
+      if (touchActive) return;
+      showTooltipAt(e.clientX, e.clientY, svg);
+    });
     svg.addEventListener("mouseleave", tooltip.hide);
+
+    svg.addEventListener("touchstart", () => { touchActive = true; }, { passive: true });
 
     svg.addEventListener("touchmove", (e) => {
       e.preventDefault();
@@ -182,6 +189,7 @@ export function createApprovalEvolutionChart(series) {
     svg.addEventListener("touchend", (e) => {
       const t = e.changedTouches[0];
       showTooltipAt(t.clientX, t.clientY, svg, true);
+      setTimeout(() => { touchActive = false; }, 300);
     });
   }
 
