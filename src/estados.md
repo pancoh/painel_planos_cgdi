@@ -28,7 +28,7 @@ const rankingCard = (() => {
         <span class="state-ranking__value">${formatPercent(row.percentual_aprovado)}</span>
       </div>
       <div class="state-ranking__track" aria-hidden="true">
-        <span class="state-ranking__fill" data-width=${`${Math.max(4, (row.percentual_aprovado / maxStateCoverage) * 100)}%`} style="width:0%"></span>
+        <span class="state-ranking__fill" data-width=${`${row.percentual_aprovado > 0 ? Math.max(4, (row.percentual_aprovado / maxStateCoverage) * 100) : 0}%`} style="width:0%"></span>
       </div>
       <div class="state-ranking__meta">
         <span>${formatNumber(row.municipios_com_plano_aprovado)} aprovados</span>
