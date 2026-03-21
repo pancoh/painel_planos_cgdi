@@ -47,7 +47,7 @@ const rankingCard = (() => {
         observer.disconnect();
       }
     },
-    { threshold: window.innerWidth < 720 ? 0.2 : 0.5 },
+    { threshold: 0.2 },
   );
   observer.observe(container);
 
