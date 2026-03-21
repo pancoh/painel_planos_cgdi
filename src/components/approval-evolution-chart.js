@@ -111,6 +111,7 @@ export function createApprovalEvolutionChart(series) {
 
   const plotTarget = container.querySelector(".approval-evolution-chart__plot");
   plotTarget.style.position = "relative";
+  plotTarget.style.clipPath = "inset(0 100% 0 0)";
   plotTarget.append(tooltip.element);
 
   let currentPlot = null;
