@@ -179,6 +179,7 @@ function createApprovalBar(approvalByPopulation) {
     ([entry]) => {
       if (entry.isIntersecting) {
         const segments = container.querySelectorAll(".approval-bar__segment");
+        segments.forEach((seg) => seg.getBoundingClientRect()); // força reflow para Android
         segments.forEach((seg, i) => {
           seg.style.transition = `width 1.2s ease-in-out ${i * 200}ms`;
           seg.style.width = seg.dataset.width;
@@ -271,7 +272,9 @@ function createRegionRankingCard(latestRegions) {
   </div>`;
 
   document.addEventListener("approval-bar-done", () => {
-    container.querySelectorAll(".region-ranking__fill").forEach((bar, i) => {
+    const bars = container.querySelectorAll(".region-ranking__fill");
+    bars.forEach((bar) => bar.getBoundingClientRect()); // força reflow para Android
+    bars.forEach((bar, i) => {
       bar.style.transition = `width 1.2s ease-in-out ${i * 150}ms`;
       bar.style.width = bar.dataset.width;
     });
