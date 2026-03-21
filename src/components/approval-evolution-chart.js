@@ -8,11 +8,11 @@ const GROUP_ABOVE = "Acima de 250 mil hab.";
 const GROUP_BELOW = "Até 250 mil hab.";
 
 function buildPlot(rows, topSeries, belowSeries, width) {
-  const sparse = width < 520;
+  const chartWidth = width - 50;
+  const pxPerYear = chartWidth / topSeries.length;
+  const step = pxPerYear >= 42 ? 1 : pxPerYear >= 22 ? 2 : 4;
   const visibleYears = new Set(
-    sparse
-      ? topSeries.filter((_, i) => i % 2 === 0).map((r) => r.ano)
-      : topSeries.map((r) => r.ano),
+    topSeries.filter((_, i) => i % step === 0).map((r) => r.ano),
   );
   const labelSeries = topSeries.filter((r) => visibleYears.has(r.ano));
 
