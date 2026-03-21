@@ -1,6 +1,6 @@
 import * as d3 from "d3";
-import {PALETTE} from "../lib/theme.js";
-import {formatNumber, formatPercent} from "../lib/formatters.js";
+import { PALETTE } from "../lib/theme.js";
+import { formatNumber, formatPercent } from "../lib/formatters.js";
 import {
   ns,
   W,
@@ -18,7 +18,12 @@ import {
 // statesGeo: GeoJSON FeatureCollection with all 27 states (passed from index.md)
 // fetchMunicipiosByUf: async (uf: string) => municipality rows[] — called on state click
 // fetchGeoByState: async (codarea: string) => GeoJSON FeatureCollection — called on state click
-export function brazilCoverageMap(rows, statesGeo, fetchMunicipiosByUf, fetchGeoByState) {
+export function brazilCoverageMap(
+  rows,
+  statesGeo,
+  fetchMunicipiosByUf,
+  fetchGeoByState,
+) {
   const values = new Map(rows.map((row) => [row.uf, row]));
   const maxApproved = d3.max(rows, (d) => d.municipios_com_plano_aprovado) || 1;
   const color = d3
@@ -27,8 +32,13 @@ export function brazilCoverageMap(rows, statesGeo, fetchMunicipiosByUf, fetchGeo
     .range(["#c8dfc6", PALETTE.greenDeep]);
 
   // Build projection from actual data bounds
-  const projection = d3.geoMercator()
-    .fitExtent([[10, 10], [W - 10, H - 10]], statesGeo);
+  const projection = d3.geoMercator().fitExtent(
+    [
+      [10, 10],
+      [W - 10, H - 10],
+    ],
+    statesGeo,
+  );
   const pathGen = d3.geoPath(projection);
 
   // ── DOM structure ─────────────────────────────────────────────────────────
@@ -39,6 +49,14 @@ export function brazilCoverageMap(rows, statesGeo, fetchMunicipiosByUf, fetchGeo
   backBtn.className = "map-back-btn button button-secondary";
   backBtn.textContent = "← Voltar ao Brasil";
   backBtn.style.display = "none";
+
+  const stateBadge = document.createElement("div");
+  stateBadge.className = "map-state-badge";
+  stateBadge.hidden = true;
+
+  const statusNotice = document.createElement("p");
+  statusNotice.className = "map-loading";
+  statusNotice.style.display = "none";
 
   const canvas = document.createElement("div");
   canvas.className = "map-canvas";
@@ -60,7 +78,8 @@ export function brazilCoverageMap(rows, statesGeo, fetchMunicipiosByUf, fetchGeo
   canvas.append(svg);
 
   // ── D3 zoom (programmatic only) ────────────────────────────────────────────
-  const zoom = d3.zoom()
+  const zoom = d3
+    .zoom()
     .scaleExtent([1, 9])
     .filter(() => false)
     .on("zoom", (event) => {
@@ -79,6 +98,19 @@ export function brazilCoverageMap(rows, statesGeo, fetchMunicipiosByUf, fetchGeo
 
   // ── State ──────────────────────────────────────────────────────────────────
   let selectedState = null;
+  let requestCounter = 0;
+
+  function showStatus(message, tone = "loading") {
+    statusNotice.textContent = message;
+    statusNotice.dataset.tone = tone;
+    statusNotice.style.display = "inline-block";
+  }
+
+  function hideStatus() {
+    statusNotice.style.display = "none";
+    delete statusNotice.dataset.tone;
+    statusNotice.textContent = "";
+  }
 
   function zoomToFeature(feature) {
     const [[x0, y0], [x1, y1]] = pathGen.bounds(feature);
@@ -93,7 +125,10 @@ export function brazilCoverageMap(rows, statesGeo, fetchMunicipiosByUf, fetchGeo
       .ease(d3.easeCubicInOut)
       .call(
         zoom.transform,
-        d3.zoomIdentity.translate(W / 2, H / 2).scale(scale).translate(-cx, -cy)
+        d3.zoomIdentity
+          .translate(W / 2, H / 2)
+          .scale(scale)
+          .translate(-cx, -cy),
       );
   }
 
@@ -108,28 +143,52 @@ export function brazilCoverageMap(rows, statesGeo, fetchMunicipiosByUf, fetchGeo
   async function handleStateClick(feature) {
     const codarea = feature.properties?.codarea;
     const uf = IBGE_TO_UF[Number(codarea)];
-    selectedState = {codarea, uf};
+    const data = values.get(uf);
+    const stateName = data?.estado_nome ?? feature.properties?.nome ?? uf;
+    const requestId = ++requestCounter;
+    selectedState = { codarea, uf, requestId };
+    munisLayer.innerHTML = "";
     applyStateSelection(statesLayer, values, uf, color);
     tooltip.hide();
     backBtn.style.display = "";
+    stateBadge.textContent = stateName;
+    stateBadge.hidden = false;
+    showStatus("Carregando municípios…");
     legend.style.display = "none";
     legendMunis.style.display = "";
     zoomToFeature(feature);
 
-    const [munData, geoData] = await Promise.all([
-      fetchMunicipiosByUf(uf),
-      fetchGeoByState(codarea),
-    ]);
-    // Guard: ignore if user navigated to another state while loading
-    if (selectedState?.uf !== uf) return;
-    const munIndex = new Map(munData.map((m) => [m.codigo_ibge, m]));
-    renderMunicipioLayer({geoData, munIndex, munisLayer, pathGen, tooltip, wrapper});
+    try {
+      const [munData, geoData] = await Promise.all([
+        fetchMunicipiosByUf(uf),
+        fetchGeoByState(codarea),
+      ]);
+      // Guard: ignore if user navigated to another state while loading
+      if (selectedState?.requestId !== requestId) return;
+      const munIndex = new Map(munData.map((m) => [m.codigo_ibge, m]));
+      renderMunicipioLayer({
+        geoData,
+        munIndex,
+        munisLayer,
+        pathGen,
+        tooltip,
+        wrapper,
+      });
+      hideStatus();
+    } catch (error) {
+      if (selectedState?.requestId !== requestId) return;
+      munisLayer.innerHTML = "";
+      showStatus("Não foi possível carregar os municípios.", "error");
+      console.error("Erro ao carregar mapa municipal:", error);
+    }
   }
 
   function handleBack() {
     selectedState = null;
     munisLayer.innerHTML = "";
     backBtn.style.display = "none";
+    stateBadge.hidden = true;
+    hideStatus();
     legend.style.display = "";
     legendMunis.style.display = "none";
     resetZoom();
@@ -147,7 +206,10 @@ export function brazilCoverageMap(rows, statesGeo, fetchMunicipiosByUf, fetchGeo
     const path = document.createElementNS(ns, "path");
     path.setAttribute("d", pathGen(feature) ?? "");
     path.setAttribute("class", "state-shape");
-    path.setAttribute("fill", data ? color(data.municipios_com_plano_aprovado) : PALETTE.blueSoft);
+    path.setAttribute(
+      "fill",
+      data ? color(data.municipios_com_plano_aprovado) : PALETTE.blueSoft,
+    );
     path.setAttribute("stroke", PALETTE.sand);
     path.setAttribute("stroke-width", "1.5");
     path.style.cursor = "pointer";
@@ -171,7 +233,7 @@ export function brazilCoverageMap(rows, statesGeo, fetchMunicipiosByUf, fetchGeo
     path.addEventListener("mouseleave", tooltip.hide);
 
     path.addEventListener("click", () => {
-      if (!selectedState) handleStateClick(feature);
+      handleStateClick(feature);
     });
 
     statesLayer.append(path);
@@ -181,21 +243,29 @@ export function brazilCoverageMap(rows, statesGeo, fetchMunicipiosByUf, fetchGeo
   const legend = createLegend({
     label: "Leitura principal",
     items: [
-      {className: "swatch swatch-approved", text: "Mais planos aprovados"},
-      {className: "swatch swatch-neutral", text: "Menos planos aprovados"},
+      { className: "swatch swatch-approved", text: "Mais planos aprovados" },
+      { className: "swatch swatch-neutral", text: "Menos planos aprovados" },
     ],
     note: "Passe o cursor sobre a UF para ver detalhes. Clique para ampliar e ver os municípios.",
   });
   const legendMunis = createLegend({
     label: "Situação dos municípios",
     items: [
-      {color: PALETTE.green, text: "Plano aprovado"},
-      {color: PALETTE.red, text: "Obrigado sem plano"},
-      {color: PALETTE.border, text: "Demais"},
+      { color: PALETTE.green, text: "Plano aprovado" },
+      { color: PALETTE.red, text: "Obrigado sem plano" },
+      { color: PALETTE.border, text: "Demais" },
     ],
   });
   legendMunis.style.display = "none";
 
-  wrapper.append(backBtn, legend, legendMunis, canvas, tooltip.element);
+  wrapper.append(
+    backBtn,
+    stateBadge,
+    statusNotice,
+    legend,
+    legendMunis,
+    canvas,
+    tooltip.element,
+  );
   return wrapper;
 }

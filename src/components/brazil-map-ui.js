@@ -1,4 +1,4 @@
-import {PALETTE} from "../lib/theme.js";
+import { PALETTE } from "../lib/theme.js";
 
 export const ns = "http://www.w3.org/2000/svg";
 export const W = 700;
@@ -11,10 +11,33 @@ const TOOLTIP_OFFSET = 18;
 const TOOLTIP_MARGIN = 12;
 
 export const IBGE_TO_UF = {
-  12: "AC", 27: "AL", 13: "AM", 16: "AP", 29: "BA", 23: "CE", 53: "DF",
-  32: "ES", 52: "GO", 21: "MA", 31: "MG", 50: "MS", 51: "MT", 15: "PA",
-  25: "PB", 26: "PE", 22: "PI", 41: "PR", 33: "RJ", 24: "RN", 11: "RO",
-  14: "RR", 43: "RS", 42: "SC", 28: "SE", 35: "SP", 17: "TO",
+  12: "AC",
+  27: "AL",
+  13: "AM",
+  16: "AP",
+  29: "BA",
+  23: "CE",
+  53: "DF",
+  32: "ES",
+  52: "GO",
+  21: "MA",
+  31: "MG",
+  50: "MS",
+  51: "MT",
+  15: "PA",
+  25: "PB",
+  26: "PE",
+  22: "PI",
+  41: "PR",
+  33: "RJ",
+  24: "RN",
+  11: "RO",
+  14: "RR",
+  43: "RS",
+  42: "SC",
+  28: "SE",
+  35: "SP",
+  17: "TO",
 };
 
 export function municipioColor(row) {
@@ -30,7 +53,7 @@ export function createTooltip() {
   tooltip.hidden = true;
 
   const header = document.createElement("strong");
-  const lines = Array.from({length: 4}, () => {
+  const lines = Array.from({ length: 4 }, () => {
     const line = document.createElement("span");
     line.hidden = true;
     return line;
@@ -64,7 +87,7 @@ export function positionTooltip(tooltip, wrapper, event, height) {
   tooltip.style.top = `${Math.min(Math.max(TOOLTIP_MARGIN, event.clientY - bounds.top + TOOLTIP_OFFSET), bounds.height - height - TOOLTIP_MARGIN)}px`;
 }
 
-export function createLegend({label, items, note}) {
+export function createLegend({ label, items, note }) {
   const legend = document.createElement("div");
   legend.className = "map-legend";
   const header = document.createElement("div");
@@ -105,11 +128,13 @@ export function applyStateSelection(statesLayer, values, selectedUf, color) {
     path.setAttribute(
       "fill",
       isSelected
-        ? (data ? color(data.municipios_com_plano_aprovado) : PALETTE.blueSoft)
+        ? data
+          ? color(data.municipios_com_plano_aprovado)
+          : PALETTE.blueSoft
         : PALETTE.border,
     );
-    path.setAttribute("pointer-events", "none");
-    path.style.cursor = "default";
+    path.setAttribute("pointer-events", "auto");
+    path.style.cursor = "pointer";
   }
 }
 
