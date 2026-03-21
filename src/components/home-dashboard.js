@@ -177,7 +177,9 @@ function createApprovalBar(approvalByPopulation) {
 
   function animateBars() {
     const segments = container.querySelectorAll(".approval-bar__segment");
-    segments.forEach((seg) => seg.getBoundingClientRect()); // força reflow
+    // getComputedStyle é trigger de reflow mais forte que getBoundingClientRect —
+    // necessário para Samsung Internet que ignora o reflow do getBoundingClientRect
+    segments.forEach((seg) => getComputedStyle(seg).width);
     segments.forEach((seg, i) => {
       seg.style.transition = `width 1.2s ease-in-out ${i * 200}ms`;
       seg.style.width = seg.dataset.width;
@@ -189,12 +191,12 @@ function createApprovalBar(approvalByPopulation) {
   }
 
   // Se o elemento já está visível no viewport (ex: tablet com tela grande),
-  // usa double rAF para garantir que width:0% foi pintado antes de animar.
-  // Caso contrário, aguarda scroll via IntersectionObserver.
+  // usa setTimeout para garantir que width:0% foi pintado antes de animar.
+  // Double rAF não é suficiente no Samsung Internet.
   const rect = container.getBoundingClientRect();
   const alreadyVisible = rect.top < window.innerHeight && rect.bottom > 0;
   if (alreadyVisible) {
-    requestAnimationFrame(() => requestAnimationFrame(animateBars));
+    setTimeout(animateBars, 100);
   } else {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -286,7 +288,7 @@ function createRegionRankingCard(latestRegions) {
 
   document.addEventListener("approval-bar-done", () => {
     const bars = container.querySelectorAll(".region-ranking__fill");
-    bars.forEach((bar) => bar.getBoundingClientRect()); // força reflow para Android
+    bars.forEach((bar) => getComputedStyle(bar).width); // força reflow (compatível com Samsung Internet)
     bars.forEach((bar, i) => {
       bar.style.transition = `width 1.2s ease-in-out ${i * 150}ms`;
       bar.style.width = bar.dataset.width;

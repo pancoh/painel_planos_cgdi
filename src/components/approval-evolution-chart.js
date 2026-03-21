@@ -203,7 +203,7 @@ export function createApprovalEvolutionChart(series) {
     plotTarget.style.visibility = "visible";
     plotTarget.style.clipPath = "inset(0 100% 0 0)";
     requestAnimationFrame(() => {
-      plotTarget.getBoundingClientRect(); // força reflow para Android
+      getComputedStyle(plotTarget).clipPath; // força reflow (compatível com Samsung Internet)
       requestAnimationFrame(() => {
         plotTarget.style.transition = "clip-path 3s ease-in-out";
         plotTarget.style.clipPath = "inset(0 0% 0 0)";
