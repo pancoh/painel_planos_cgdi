@@ -1,12 +1,14 @@
-import {html} from "htl";
-import {metricGrid} from "./cards.js";
-import {brazilCoverageMap} from "./brazil-map.js";
-import {formatDate, formatNumber, formatPercent} from "../lib/formatters.js";
+import { html } from "htl";
+import { metricGrid } from "./cards.js";
+import { brazilCoverageMap } from "./brazil-map.js";
+import { createApprovalEvolutionChart } from "./approval-evolution-chart.js";
+import { formatDate, formatNumber, formatPercent } from "../lib/formatters.js";
 
 export function createHomeDashboard({
   metadata,
   latestRegions,
   latestStates,
+  approvalSeries,
   estadosGeo,
   fetchMunicipiosByUf,
   fetchGeoByState,
@@ -32,7 +34,11 @@ export function createHomeDashboard({
       </div>
       <div class="dashboard-toolbar__side">
         <div class="dashboard-toolbar__meta">
-          <span><strong>Atualização:</strong> ${formatDate(metadata.last_reference_date)}</span>
+          <span
+            ><strong>Atualização:</strong> ${formatDate(
+              metadata.last_reference_date,
+            )}</span
+          >
         </div>
       </div>
     </div>
@@ -40,12 +46,19 @@ export function createHomeDashboard({
       <div class="section-heading">
         <div>
           <h2>Resumo Nacional</h2>
-          <p><a href="./obrigados">Municípios obrigados</a> a elaborar e aprovar plano, conforme a <a href="https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/lei/l12587.htm" target="_blank" rel="noopener">Lei nº 12.587/2012</a>.</p>
+          <p>
+            <a href="./obrigados">Municípios obrigados</a> a elaborar e aprovar
+            plano, conforme a
+            <a
+              href="https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/lei/l12587.htm"
+              target="_blank"
+              rel="noopener"
+              >Lei nº 12.587/2012</a
+            >.
+          </p>
         </div>
       </div>
-      <div class="summary-strip__grid">
-        ${createSummaryCards(summary)}
-      </div>
+      <div class="summary-strip__grid">${createSummaryCards(summary)}</div>
     </div>
     <div class="dashboard-stage">
       <aside class="dashboard-sidebar">
@@ -53,7 +66,10 @@ export function createHomeDashboard({
           <div class="section-heading">
             <div>
               <h2>Obrigados e planos aprovados</h2>
-              <p>Entre os <a href="./obrigados">municípios obrigados</a>, quantos já possuem plano aprovado.</p>
+              <p>
+                Entre os <a href="./obrigados">municípios obrigados</a>, quantos
+                já possuem plano aprovado.
+              </p>
             </div>
           </div>
           ${createApprovalBar(metadata.approval_by_population)}
@@ -62,7 +78,11 @@ export function createHomeDashboard({
           <div class="section-heading">
             <div>
               <h2>Cobertura por região</h2>
-              <p>Ranking do percentual de <a href="./obrigados">municípios obrigados</a> com plano aprovado.</p>
+              <p>
+                Ranking do percentual de
+                <a href="./obrigados">municípios obrigados</a> com plano
+                aprovado.
+              </p>
             </div>
           </div>
           ${createRegionRankingCard(latestRegions)}
@@ -73,20 +93,53 @@ export function createHomeDashboard({
           <div class="section-heading">
             <div>
               <h2>Mapa por unidade da federação</h2>
-              <p>O mapa destaca, por UF, quantos <a href="./obrigados">municípios obrigados</a> pela <a href="https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/lei/l12587.htm" target="_blank" rel="noopener">Lei nº 12.587/2012</a> já possuem plano aprovado.</p>
+              <p>
+                O mapa destaca, por UF, quantos
+                <a href="./obrigados">municípios obrigados</a> pela
+                <a
+                  href="https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/lei/l12587.htm"
+                  target="_blank"
+                  rel="noopener"
+                  >Lei nº 12.587/2012</a
+                >
+                já possuem plano aprovado.
+              </p>
             </div>
           </div>
-          ${brazilCoverageMap(latestStates, estadosGeo, fetchMunicipiosByUf, fetchGeoByState)}
+          ${brazilCoverageMap(
+            latestStates,
+            estadosGeo,
+            fetchMunicipiosByUf,
+            fetchGeoByState,
+          )}
         </div>
       </div>
+    </div>
+    <div class="card panel-card approval-evolution-card">
+      <div class="section-heading">
+        <div>
+          <h2>Evolução acumulada dos planos aprovados</h2>
+          <p>
+            Total acumulado de
+            <a href="./obrigados">municípios obrigados</a> com plano aprovado,
+            por ano e porte populacional.
+          </p>
+        </div>
+      </div>
+      ${createApprovalEvolutionChart(approvalSeries)}
     </div>
   </section>`;
 }
 
-function createSummaryCards(summary /*, metadata, percentualAprovadoDelta, percentualAprovadoDeltaText */) {
+function createSummaryCards(
+  summary /*, metadata, percentualAprovadoDelta, percentualAprovadoDeltaText */,
+) {
   return metricGrid([
-    {label: "Municípios", value: formatNumber(summary.total_municipios)},
-    {label: "Obrigados (Censo 2022)", value: formatNumber(summary.total_obrigados)},
+    { label: "Municípios", value: formatNumber(summary.total_municipios) },
+    {
+      label: "Obrigados (Censo 2022)",
+      value: formatNumber(summary.total_obrigados),
+    },
     {
       label: "Plano aprovado",
       value: formatNumber(summary.municipios_com_plano_aprovado),
@@ -115,51 +168,81 @@ function createApprovalBar(approvalByPopulation) {
     ${approvalGroup("Até 250 mil habitantes", statsAbaixo)}
     <div class="approval-bar__meta">
       <span>Total de obrigados: ${formatNumber(statsTotal.total)}</span>
-      <span>Percentual com plano aprovado: <strong>${formatPercent(statsTotal.pct)}</strong></span>
+      <span
+        >Percentual com plano aprovado:
+        <strong>${formatPercent(statsTotal.pct)}</strong></span
+      >
     </div>
   </div>`;
 }
 
 function approvalGroup(label, stats) {
-  const approvedWidth = stats.total > 0 ? (stats.aprovados / stats.total) * 100 : 0;
-  const pendingWidth = stats.total > 0 ? (stats.sem_plano / stats.total) * 100 : 0;
+  const approvedWidth =
+    stats.total > 0 ? (stats.aprovados / stats.total) * 100 : 0;
+  const pendingWidth =
+    stats.total > 0 ? (stats.sem_plano / stats.total) * 100 : 0;
   return html`<div class="approval-group">
     <div class="approval-group__header">${label}</div>
     <div class="approval-bar__track" aria-label=${label}>
-      <div class="approval-bar__segment approval-bar__segment--approved" style=${`width:${approvedWidth}%`}>
+      <div
+        class="approval-bar__segment approval-bar__segment--approved"
+        style=${`width:${approvedWidth}%`}
+      >
         <strong>${formatNumber(stats.aprovados)}</strong>
       </div>
-      <div class="approval-bar__segment approval-bar__segment--pending" style=${`width:${pendingWidth}%`}>
+      <div
+        class="approval-bar__segment approval-bar__segment--pending"
+        style=${`width:${pendingWidth}%`}
+      >
         <strong>${formatNumber(stats.sem_plano)}</strong>
       </div>
     </div>
     <div class="approval-bar__meta">
       <span>Total de obrigados: ${formatNumber(stats.total)}</span>
-      <span>Percentual com plano aprovado: <strong>${formatPercent(stats.pct)}</strong></span>
+      <span
+        >Percentual com plano aprovado:
+        <strong>${formatPercent(stats.pct)}</strong></span
+      >
     </div>
   </div>`;
 }
 
 function createRegionRankingCard(latestRegions) {
-  const regionRows = [...latestRegions].sort((a, b) => b.percentual_aprovado - a.percentual_aprovado);
-  const maxRegionCoverage = Math.max(0.01, ...regionRows.map((row) => row.percentual_aprovado));
+  const regionRows = [...latestRegions].sort(
+    (a, b) => b.percentual_aprovado - a.percentual_aprovado,
+  );
+  const maxRegionCoverage = Math.max(
+    0.01,
+    ...regionRows.map((row) => row.percentual_aprovado),
+  );
 
   return html`<div class="region-ranking">
-    ${regionRows.map((row, index) => html`<div class="region-ranking__row">
-      <div class="region-ranking__header">
-        <div class="region-ranking__label">
-          <span class="region-ranking__position">${index + 1}</span>
-          <strong>${row.regiao}</strong>
-        </div>
-        <span class="region-ranking__value">${formatPercent(row.percentual_aprovado)}</span>
-      </div>
-      <div class="region-ranking__track" aria-hidden="true">
-        <span class="region-ranking__fill" style=${`width:${Math.max(10, (row.percentual_aprovado / maxRegionCoverage) * 100)}%`}></span>
-      </div>
-      <div class="region-ranking__meta">
-        <span>${formatNumber(row.municipios_com_plano_aprovado)} aprovados</span>
-        <span>${formatNumber(row.total_obrigados)} obrigados</span>
-      </div>
-    </div>`)}
+    ${regionRows.map(
+      (row, index) =>
+        html`<div class="region-ranking__row">
+          <div class="region-ranking__header">
+            <div class="region-ranking__label">
+              <span class="region-ranking__position">${index + 1}</span>
+              <strong>${row.regiao}</strong>
+            </div>
+            <span class="region-ranking__value"
+              >${formatPercent(row.percentual_aprovado)}</span
+            >
+          </div>
+          <div class="region-ranking__track" aria-hidden="true">
+            <span
+              class="region-ranking__fill"
+              style=${`width:${Math.max(10, (row.percentual_aprovado / maxRegionCoverage) * 100)}%`}
+            ></span>
+          </div>
+          <div class="region-ranking__meta">
+            <span
+              >${formatNumber(row.municipios_com_plano_aprovado)}
+              aprovados</span
+            >
+            <span>${formatNumber(row.total_obrigados)} obrigados</span>
+          </div>
+        </div>`,
+    )}
   </div>`;
 }

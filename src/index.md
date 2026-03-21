@@ -10,6 +10,7 @@ import {createGeoByStateLoader, createMunicipiosByUfJsonLoader} from "./lib/data
 const metadata = await FileAttachment("data/processed/metadata.json").json();
 const latestRegions = await FileAttachment("data/processed/latest-regioes.json").json();
 const latestStates = await FileAttachment("data/processed/latest-ufs.json").json();
+const approvalSeries = await FileAttachment("data/processed/evolucao-aprovados.json").json();
 const estadosGeo = await FileAttachment("geo/estados.json").json();
 const ufAttachments = {
   AC: FileAttachment("data/processed/municipios-uf-ac.json"),
@@ -75,6 +76,7 @@ const dashboardLayout = createHomeDashboard({
   metadata,
   latestRegions,
   latestStates,
+  approvalSeries,
   estadosGeo,
   fetchMunicipiosByUf,
   fetchGeoByState,

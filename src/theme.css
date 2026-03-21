@@ -899,6 +899,48 @@
     color: var(--theme-foreground-muted);
 }
 
+.approval-evolution-card {
+    margin-top: 1.5rem;
+}
+
+.approval-evolution-chart {
+    display: grid;
+    gap: 0.85rem;
+}
+
+.approval-evolution-chart__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.85rem 1.25rem;
+    color: var(--theme-foreground-muted);
+    font-size: 0.82rem;
+}
+
+.approval-evolution-chart__legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.approval-evolution-chart__legend i {
+    display: inline-block;
+    width: 0.8rem;
+    height: 0.8rem;
+    border-radius: 999px;
+}
+
+.approval-evolution-chart__canvas {
+    position: relative;
+    overflow: visible;
+}
+
+.approval-evolution-chart__svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+}
+
 .state-ranking {
     display: grid;
     gap: 0.62rem;
