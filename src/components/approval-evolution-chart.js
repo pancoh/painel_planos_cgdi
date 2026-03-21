@@ -217,7 +217,7 @@ export function createApprovalEvolutionChart(series) {
         observer.disconnect();
       }
     },
-    { threshold: 0.5 },
+    { threshold: window.innerWidth < 720 ? 0.1 : 0.5 },
   );
   observer.observe(plotTarget);
 
