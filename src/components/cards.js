@@ -13,10 +13,18 @@ export function metricGrid(metrics) {
   return grid;
 }
 
-export function metricCard({label, value, detail, delta, deltaText, tone = "default"}) {
+export function metricCard({label, value, detail, delta, deltaText, tone = "default", icon}) {
   const card = createNode("article", `metric-card tone-${tone}`);
   const labelNode = createNode("p", "metric-label", label);
   const valueRow = createNode("div", "metric-value-row");
+  if (icon) {
+    const img = document.createElement("img");
+    img.src = icon;
+    img.alt = "";
+    img.className = "metric-icon";
+    img.style.cssText = "height:24px;width:auto;border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,0.1);flex-shrink:0;";
+    valueRow.append(img);
+  }
   const valueNode = createNode("strong", "metric-value", value);
   valueRow.append(valueNode);
   if (delta !== null && delta !== undefined) {

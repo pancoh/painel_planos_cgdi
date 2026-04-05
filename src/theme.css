@@ -976,6 +976,14 @@
     font-weight: 700;
 }
 
+.state-ranking__flag {
+    height: 18px;
+    width: auto;
+    border-radius: 2px;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
+    flex-shrink: 0;
+}
+
 .state-ranking__header strong {
     font-size: 0.9rem;
 }

@@ -14,6 +14,35 @@ const latestStates = await FileAttachment("data/processed/latest-ufs.json").json
 const fetchMunicipiosByUf = createMunicipiosByUfCsvLoader(
   FileAttachment("data/processed/latest-municipios.csv"),
 );
+const flags = {
+  AC: FileAttachment("assets/flags/ac.png").href,
+  AL: FileAttachment("assets/flags/al.png").href,
+  AM: FileAttachment("assets/flags/am.png").href,
+  AP: FileAttachment("assets/flags/ap.png").href,
+  BA: FileAttachment("assets/flags/ba.png").href,
+  CE: FileAttachment("assets/flags/ce.png").href,
+  DF: FileAttachment("assets/flags/df.png").href,
+  ES: FileAttachment("assets/flags/es.png").href,
+  GO: FileAttachment("assets/flags/go.png").href,
+  MA: FileAttachment("assets/flags/ma.png").href,
+  MG: FileAttachment("assets/flags/mg.png").href,
+  MS: FileAttachment("assets/flags/ms.png").href,
+  MT: FileAttachment("assets/flags/mt.png").href,
+  PA: FileAttachment("assets/flags/pa.png").href,
+  PB: FileAttachment("assets/flags/pb.png").href,
+  PE: FileAttachment("assets/flags/pe.png").href,
+  PI: FileAttachment("assets/flags/pi.png").href,
+  PR: FileAttachment("assets/flags/pr.png").href,
+  RJ: FileAttachment("assets/flags/rj.png").href,
+  RN: FileAttachment("assets/flags/rn.png").href,
+  RO: FileAttachment("assets/flags/ro.png").href,
+  RR: FileAttachment("assets/flags/rr.png").href,
+  RS: FileAttachment("assets/flags/rs.png").href,
+  SC: FileAttachment("assets/flags/sc.png").href,
+  SE: FileAttachment("assets/flags/se.png").href,
+  SP: FileAttachment("assets/flags/sp.png").href,
+  TO: FileAttachment("assets/flags/to.png").href,
+};
 const stateRows = [...latestStates].sort((a, b) => b.percentual_aprovado - a.percentual_aprovado);
 const maxStateCoverage = Math.max(0.01, ...stateRows.map((row) => row.percentual_aprovado));
 const rankingCard = (() => {
@@ -22,6 +51,7 @@ const rankingCard = (() => {
       <div class="state-ranking__header">
         <div class="state-ranking__label">
           <span class="state-ranking__position">${index + 1}</span>
+          <img class="state-ranking__flag" src=${flags[row.uf]} alt=${`Bandeira ${row.estado_nome}`} style="height:18px;width:auto;" loading="lazy" />
           <strong>${row.uf}</strong>
           <span class="state-ranking__name">${row.estado_nome}</span>
         </div>
@@ -74,7 +104,8 @@ ${(() => {
     return {
       label: regiao,
       value: best.uf,
-      detail: `${best.estado_nome} — ${formatPercent(best.percentual_aprovado)}`
+      detail: `${best.estado_nome} — ${formatPercent(best.percentual_aprovado)}`,
+      icon: flags[best.uf]
     };
   });
   const grid = metricGrid(cards);
@@ -92,4 +123,4 @@ ${(() => {
   ${rankingCard}
 </div>
 
-${createStateExplorer(latestStates, fetchMunicipiosByUf)}
+${createStateExplorer(latestStates, fetchMunicipiosByUf, flags)}

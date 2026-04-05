@@ -3,7 +3,7 @@ import {labelWrap, sectionHeading} from "./dom-utils.js";
 import {formatNumber, formatPercent} from "../lib/formatters.js";
 import {createMunicipioExplorer} from "./municipio-explorer.js";
 
-export function createStateExplorer(states, fetchMunicipiosByUf) {
+export function createStateExplorer(states, fetchMunicipiosByUf, flagUrls) {
   const root = document.createElement("section");
   root.className = "state-explorer";
   let currentUf = states[0]?.uf;
@@ -19,11 +19,22 @@ export function createStateExplorer(states, fetchMunicipiosByUf) {
   }
   controls.append(labelWrap("UF", select));
 
+  const flagImg = flagUrls ? (() => {
+    const img = document.createElement("img");
+    img.className = "state-explorer__flag";
+    img.style.cssText = "height:28px;width:auto;border-radius:3px;box-shadow:0 0 0 1px rgba(0,0,0,0.1);margin-left:0.5rem;vertical-align:middle;";
+    img.alt = "";
+    return img;
+  })() : null;
+
+  const heading = sectionHeading("Leitura por estado", "Resumo estadual e consulta municipal.");
+  if (flagImg) heading.querySelector("h2")?.append(flagImg);
+
   const metricsHost = document.createElement("div");
   const explorerHost = document.createElement("div");
 
   root.append(
-    sectionHeading("Leitura por estado", "Resumo estadual e consulta municipal."),
+    heading,
     controls,
     metricsHost,
     explorerHost,
@@ -38,6 +49,10 @@ export function createStateExplorer(states, fetchMunicipiosByUf) {
   async function update() {
     const uf = currentUf;
     const state = states.find((row) => row.uf === uf);
+    if (flagImg && flagUrls[uf]) {
+      flagImg.src = flagUrls[uf];
+      flagImg.alt = `Bandeira ${state.estado_nome}`;
+    }
     metricsHost.replaceChildren(
       metricGrid([
         {label: "Municípios", value: formatNumber(state.total_municipios)},
