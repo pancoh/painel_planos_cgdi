@@ -269,14 +269,28 @@
     "ano": 2025,
     "grupo": "Até 250 mil hab.",
     "y1": 0,
-    "y2": 300,
-    "total": 390
+    "y2": 301,
+    "total": 391
   },
   {
     "ano": 2025,
     "grupo": "Acima de 250 mil hab.",
-    "y1": 300,
-    "y2": 390,
-    "total": 390
+    "y1": 301,
+    "y2": 391,
+    "total": 391
+  },
+  {
+    "ano": 2026,
+    "grupo": "Até 250 mil hab.",
+    "y1": 0,
+    "y2": 302,
+    "total": 392
+  },
+  {
+    "ano": 2026,
+    "grupo": "Acima de 250 mil hab.",
+    "y1": 302,
+    "y2": 392,
+    "total": 392
   }
 ]
