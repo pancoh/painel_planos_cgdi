@@ -185,112 +185,112 @@
     "ano": 2019,
     "grupo": "Até 250 mil hab.",
     "y1": 0,
-    "y2": 213,
-    "total": 260
+    "y2": 215,
+    "total": 262
   },
   {
     "ano": 2019,
     "grupo": "Acima de 250 mil hab.",
-    "y1": 213,
-    "y2": 260,
-    "total": 260
-  },
-  {
-    "ano": 2020,
-    "grupo": "Até 250 mil hab.",
-    "y1": 0,
-    "y2": 222,
-    "total": 270
-  },
-  {
-    "ano": 2020,
-    "grupo": "Acima de 250 mil hab.",
-    "y1": 222,
-    "y2": 270,
-    "total": 270
-  },
-  {
-    "ano": 2021,
-    "grupo": "Até 250 mil hab.",
-    "y1": 0,
-    "y2": 227,
-    "total": 279
-  },
-  {
-    "ano": 2021,
-    "grupo": "Acima de 250 mil hab.",
-    "y1": 227,
-    "y2": 279,
-    "total": 279
-  },
-  {
-    "ano": 2022,
-    "grupo": "Até 250 mil hab.",
-    "y1": 0,
-    "y2": 237,
-    "total": 308
-  },
-  {
-    "ano": 2022,
-    "grupo": "Acima de 250 mil hab.",
-    "y1": 237,
-    "y2": 308,
-    "total": 308
-  },
-  {
-    "ano": 2023,
-    "grupo": "Até 250 mil hab.",
-    "y1": 0,
+    "y1": 215,
     "y2": 262,
-    "total": 340
+    "total": 262
+  },
+  {
+    "ano": 2020,
+    "grupo": "Até 250 mil hab.",
+    "y1": 0,
+    "y2": 224,
+    "total": 272
+  },
+  {
+    "ano": 2020,
+    "grupo": "Acima de 250 mil hab.",
+    "y1": 224,
+    "y2": 272,
+    "total": 272
+  },
+  {
+    "ano": 2021,
+    "grupo": "Até 250 mil hab.",
+    "y1": 0,
+    "y2": 230,
+    "total": 282
+  },
+  {
+    "ano": 2021,
+    "grupo": "Acima de 250 mil hab.",
+    "y1": 230,
+    "y2": 282,
+    "total": 282
+  },
+  {
+    "ano": 2022,
+    "grupo": "Até 250 mil hab.",
+    "y1": 0,
+    "y2": 240,
+    "total": 311
+  },
+  {
+    "ano": 2022,
+    "grupo": "Acima de 250 mil hab.",
+    "y1": 240,
+    "y2": 311,
+    "total": 311
+  },
+  {
+    "ano": 2023,
+    "grupo": "Até 250 mil hab.",
+    "y1": 0,
+    "y2": 265,
+    "total": 344
   },
   {
     "ano": 2023,
     "grupo": "Acima de 250 mil hab.",
-    "y1": 262,
-    "y2": 340,
-    "total": 340
+    "y1": 265,
+    "y2": 344,
+    "total": 344
   },
   {
     "ano": 2024,
     "grupo": "Até 250 mil hab.",
     "y1": 0,
-    "y2": 273,
-    "total": 361
+    "y2": 276,
+    "total": 365
   },
   {
     "ano": 2024,
     "grupo": "Acima de 250 mil hab.",
-    "y1": 273,
-    "y2": 361,
-    "total": 361
+    "y1": 276,
+    "y2": 365,
+    "total": 365
   },
   {
     "ano": 2025,
     "grupo": "Até 250 mil hab.",
     "y1": 0,
-    "y2": 302,
-    "total": 392
+    "y2": 305,
+    "total": 396
   },
   {
     "ano": 2025,
     "grupo": "Acima de 250 mil hab.",
-    "y1": 302,
-    "y2": 392,
-    "total": 392
+    "y1": 305,
+    "y2": 396,
+    "total": 396
   },
   {
     "ano": 2026,
     "grupo": "Até 250 mil hab.",
     "y1": 0,
-    "y2": 304,
-    "total": 394
+    "y2": 307,
+    "total": 399
   },
   {
     "ano": 2026,
     "grupo": "Acima de 250 mil hab.",
-    "y1": 304,
-    "y2": 394,
-    "total": 394
+    "y1": 307,
+    "y2": 399,
+    "total": 399
   }
 ]
