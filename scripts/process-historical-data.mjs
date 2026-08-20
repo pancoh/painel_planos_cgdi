@@ -247,13 +247,16 @@ function normalizeRow(rawRow, fileInfo) {
 }
 
 function deriveStatus(row) {
-  if (row.respondeu_ao_levantamento === "Não foi enviado ofício")
-    return "Sem ofício";
-  if (row.respondeu_ao_levantamento !== "Respondeu") return "Sem resposta";
+  // O conteudo da resposta define o status. O canal de coleta (oficio) so
+  // decide quando nao ha informacao sobre o plano: municipios que responderam
+  // por outro canal (e-mail, por exemplo) contam como respondentes.
   if (row.aprovado_lei === "Sim") return "Plano aprovado";
   if (row.possui_plano_mobilidade === "Sim") return "Possui plano";
   if (row.elaborando_plano === "Sim" || row.elaborando_plano === "Em revisão")
     return "Em elaboração";
+  if (row.respondeu_ao_levantamento === "Não foi enviado ofício")
+    return "Sem ofício";
+  if (row.respondeu_ao_levantamento !== "Respondeu") return "Sem resposta";
   return "Sem plano";
 }
 
