@@ -176,33 +176,33 @@ export function createMunicipioExplorer(rows, options = {}) {
 
 function updateDownload(anchor, rows) {
   if (anchor.href.startsWith("blob:")) URL.revokeObjectURL(anchor.href);
-  const columns = [
-    "municipio",
-    "uf",
-    "regiao",
-    "codigo_ibge",
-    "porte_populacional",
-    "obrigado",
-    "status_painel",
-    "possui_plano_mobilidade",
-    "aprovado_lei",
-    "elaborando_plano",
-    "instrumento_legal",
-    "numero_da_lei",
-    "data_da_lei",
-  ];
-  const header = columns.join(",");
-  const body = rows
-    .map((row) => columns.map((column) => {
-      const value = row[column];
-      if (column === "obrigado") return csvEscape(value ? "Sim" : "Não");
-      return csvEscape(value);
-    }).join(","))
-    .join("\n");
-  const blob = new Blob([`\uFEFF${header}\n${body}\n`], {
+  const blob = new Blob([municipioRowsToCsv(rows)], {
     type: "text/csv;charset=utf-8",
   });
   anchor.href = URL.createObjectURL(blob);
+}
+
+const CSV_COLUMNS = [
+  ["Município", (row) => row.municipio],
+  ["Código IBGE", (row) => row.codigo_ibge],
+  ["UF", (row) => row.uf],
+  ["Região", (row) => row.regiao],
+  ["Status", (row) => row.status_painel ?? "Sem informação"],
+  ["Obrigatoriedade", (row) => row.obrigado ? "Obrigatório" : "Não obrigatório"],
+  ["Pop. 2022", (row) => formatNumber(row.populacao_censo_2022 ?? row.estimativa_populacional ?? 0)],
+  ["Plano", (row) => normalizeBooleanLabel(row.possui_plano_mobilidade)],
+  ["Aprovado", (row) => normalizeBooleanLabel(row.aprovado_lei)],
+  ["Instrumento Legal", (row) => row.instrumento_legal ?? "—"],
+  ["Nº da Lei", (row) => row.numero_da_lei ?? "—"],
+  ["Data da Lei", (row) => formatDateBR(row.data_da_lei)],
+];
+
+export function municipioRowsToCsv(rows) {
+  const header = CSV_COLUMNS.map(([label]) => csvEscape(label)).join(",");
+  const body = rows.map((row) =>
+    CSV_COLUMNS.map(([, value]) => csvEscape(value(row))).join(","),
+  );
+  return `\uFEFF${[header, ...body].join("\n")}\n`;
 }
 
 function formatDateBR(value) {
