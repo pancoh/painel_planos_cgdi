@@ -62,11 +62,13 @@ export const COLUMN_ALIASES = new Map(
     populacao_censo_2022: "populacao_censo_2022",
     estimativa_populacional_2024: "estimativa_populacional",
     estimativa_populacional_2025: "estimativa_populacional",
+    estimativa_populacional_2026: "estimativa_populacional",
     faixa_populacional_censo: "faixa_populacional_2010",
     faixa_populacional_censo_2010: "faixa_populacional_2010",
     faixa_populacional_censo_2022: "faixa_populacional_2022",
     faixa_populacional_2024: "faixa_populacional_estimativa",
     faixa_populacional_2025: "faixa_populacional_estimativa",
+    faixa_populacional_2026: "faixa_populacional_estimativa",
     respondeu_ao_levantamento: "respondeu_ao_levantamento",
     possui_plano_de_mobilidade_urbana: "possui_plano_mobilidade",
     aprovado_em_lei_ou_ato_normativo: "aprovado_lei",
@@ -81,8 +83,10 @@ export const COLUMN_ALIASES = new Map(
     repondido_por_qual_instrumento: "instrumento_resposta",
     obrigados_estimativa_2024: "obrigados_estimativa",
     obrigados_estimativa_2025: "obrigados_estimativa",
+    obrigados_estimativa_2026: "obrigados_estimativa",
     obrigados_censo_2022_antigo: "obrigados_censo_2022_antigo",
     obrigados_censo_2022_atualizado: "obrigados_censo_2022_atualizado",
+    obrigados_censo_2022: "obrigados_censo_2022_atual",
     ride_rm_au_ibge_2021: "recorte_metropolitano",
     ride_rm_au_ibge_2023: "recorte_metropolitano_secundario",
     ride_rm_au_ibge_2024: "recorte_metropolitano",
@@ -210,11 +214,15 @@ export function classifyElaborationField(value) {
 }
 
 export function classifyObligation(canonical) {
-  return classifyYesNoField(canonical.obrigados_censo_2022_atualizado) === "Sim";
+  // Suporta "obrigados_censo_2022_atualizado" (formato antigo) e "obrigados_censo_2022_atual" (formato novo)
+  const atualizado = classifyYesNoField(canonical.obrigados_censo_2022_atualizado);
+  const atual = classifyYesNoField(canonical.obrigados_censo_2022_atual);
+  return atualizado === "Sim" || atual === "Sim";
 }
 
 export function inferEstimateYear(rawRow) {
   const headers = Object.keys(rawRow).map(normalizeHeader);
+  if (headers.includes("estimativa_populacional_2026")) return 2026;
   if (headers.includes("estimativa_populacional_2025")) return 2025;
   if (headers.includes("estimativa_populacional_2024")) return 2024;
   return null;
