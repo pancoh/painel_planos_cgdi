@@ -1148,6 +1148,17 @@
     opacity: 0.92;
 }
 
+.state-shape:focus {
+    outline: none;
+}
+
+.state-shape:focus-visible {
+    outline: 3px solid var(--theme-foreground-focus, #1f2937);
+    outline-offset: 1px;
+    stroke: var(--theme-foreground-focus, #1f2937);
+    stroke-width: 2.5;
+}
+
 .map-tooltip {
     position: absolute;
     z-index: 2;

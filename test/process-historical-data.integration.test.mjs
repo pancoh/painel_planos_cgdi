@@ -277,6 +277,47 @@ test("pipeline anula textos de preenchimento nas colunas de lei", async () => {
   assert.equal(campinas.status_painel, "Sem plano");
 });
 
+test("pipeline avisa valores inesperados e consolida a coluna de obrigatoriedade", async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), "cgdi-pipeline-"));
+  await prepareInputDir(tempRoot);
+
+  await writeWorkbook(
+    path.join(
+      tempRoot,
+      "Arquivos_Levantamento_PlanosdeMobilidadeUrbana",
+      "Levantamento_PlanosdeMobilidadeUrbana_01jan2026.xlsx",
+    ),
+    [
+      {
+        "Código IBGE": "3550308",
+        "Região": "SE",
+        "UF": "SP",
+        "Município": "São Paulo",
+        "Respondeu ao levantamento": "Sim",
+        "Aprovado em lei ou ato normativo": "Ssim",
+        "RMs ENMU": "Sim",
+        "Área de Estudo ENMU": "Sim*",
+        "Obrigados Censo 2022": "Sim",
+      },
+    ],
+  );
+
+  const result = await runScript(tempRoot);
+  assert.equal(result.code, 0, result.stderr);
+  assert.match(result.stderr, /valores inesperados/);
+  assert.match(result.stderr, /Ssim/);
+
+  const [row] = JSON.parse(
+    await fs.readFile(
+      path.join(tempRoot, "src", "data", "processed", "municipios-uf-sp.json"),
+      "utf8",
+    ),
+  );
+  assert.equal(row.obrigados_censo_2022_atualizado, "Sim");
+  assert.equal(row.enmu_rm, "Sim");
+  assert.equal(row.enmu_area_estudo, "Sim*");
+});
+
 async function prepareInputDir(root) {
   await fs.mkdir(path.join(root, "Arquivos_Levantamento_PlanosdeMobilidadeUrbana"), {
     recursive: true,

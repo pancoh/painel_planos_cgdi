@@ -143,3 +143,4 @@ Como planilhas, GeoJSON e bandeiras estão no git, o build no CI não depende de
 | `npm run lint` | ESLint nos componentes JS e scripts |
 | `npm run clean` | Remove `dist/` e cache do Observable |
 | `node scripts/download-flags.mjs` | Baixa as bandeiras das UFs para `src/assets/flags/` (manual; já versionadas) |
+| `node scripts/build-fonts.mjs` | Regenera `src/fonts.css` com as fontes IBM Plex embutidas (manual; só ao mudar família ou pesos) |

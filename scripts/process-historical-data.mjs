@@ -17,6 +17,8 @@ import {
   toNumber,
   mapHeaders,
   findMissingRequiredFields,
+  collectUnexpectedValues,
+  deriveStatus,
   padIbge,
   normalizeDate,
   classifyYesNoField,
@@ -80,7 +82,9 @@ async function main() {
       raw: false,
     });
     validateHeaders(fileInfo.file, Object.keys(rawRows[0] ?? {}));
-    const rows = rawRows.map((row) => normalizeRow(row, fileInfo));
+    const unexpected = new Map();
+    const rows = rawRows.map((row) => normalizeRow(row, fileInfo, unexpected));
+    reportUnexpectedValues(fileInfo.file, unexpected);
     historyRows.push(...rows);
     snapshots.push({
       file_name: fileInfo.file,
@@ -170,6 +174,23 @@ function validateHeaders(fileName, headers) {
   }
 }
 
+// Valores fora do esperado nos campos de decisão não interrompem o pipeline,
+// mas ficam visíveis no console. check-data.mjs bloqueia o build se algum
+// deles chegar ao snapshot vigente.
+function reportUnexpectedValues(fileName, unexpected) {
+  if (unexpected.size === 0) return;
+  const parts = [];
+  for (const [field, byValue] of unexpected) {
+    const values = [...byValue]
+      .map(([value, count]) => `"${value}" (${count})`)
+      .join(", ");
+    parts.push(`${field}: ${values}`);
+  }
+  console.warn(
+    `Aviso: ${fileName}: valores inesperados nos campos de decisão: ${parts.join("; ")}`,
+  );
+}
+
 function parseReferenceDate(fileName) {
   const match = fileName.match(/_(\d{1,2})([a-z]{3})(\d{4})\.xlsx$/i);
   if (!match) return null;
@@ -189,7 +210,7 @@ function parseReferenceDate(fileName) {
   return { reference_date, reference_label };
 }
 
-function normalizeRow(rawRow, fileInfo) {
+function normalizeRow(rawRow, fileInfo, unexpected = new Map()) {
   const canonical = {};
 
   for (const [header, value] of Object.entries(rawRow)) {
@@ -198,6 +219,7 @@ function normalizeRow(rawRow, fileInfo) {
     if (!alias) continue;
     canonical[alias] = value;
   }
+  collectUnexpectedValues(canonical, unexpected);
 
   const possuiPlano = classifyYesNoField(canonical.possui_plano_mobilidade);
   const aprovado = classifyYesNoField(canonical.aprovado_lei);
@@ -237,21 +259,30 @@ function normalizeRow(rawRow, fileInfo) {
     elaborando_plano: elaborando,
     instrumento_legal: cleanPlaceholder(canonical.instrumento_legal),
     numero_da_lei: cleanPlaceholder(canonical.numero_da_lei),
-    data_da_lei: normalizeDate(cleanPlaceholder(canonical.data_da_lei)),
+    data_da_lei: normalizeDate(
+      cleanPlaceholder(canonical.data_da_lei),
+      fileInfo.reference_date,
+    ),
     ano_elaboracao: toNumber(canonical.ano_elaboracao),
     oficio: cleanText(canonical.oficio),
-    data_resposta: normalizeDate(canonical.data_resposta),
+    data_resposta: normalizeDate(canonical.data_resposta, fileInfo.reference_date),
     fonte_resposta: cleanText(canonical.fonte_resposta),
     instrumento_resposta: cleanText(canonical.instrumento_resposta),
     obrigados_estimativa: classifyYesNoField(canonical.obrigados_estimativa),
     obrigados_censo_2022_antigo: classifyYesNoField(
       canonical.obrigados_censo_2022_antigo,
     ),
+    // A planilha renomeou "Obrigados Censo 2022 - atualizado" para
+    // "Obrigados Censo 2022" em set/2026. O campo exportado consolida as duas.
     obrigados_censo_2022_atualizado: classifyYesNoField(
-      canonical.obrigados_censo_2022_atualizado,
+      canonical.obrigados_censo_2022_atualizado ??
+        canonical.obrigados_censo_2022_atual,
     ),
     recorte_metropolitano: cleanText(canonical.recorte_metropolitano),
+    // "ENMU" existiu como coluna única até fev/2026; depois virou duas.
     enmu: classifyYesNoField(canonical.enmu),
+    enmu_rm: classifyYesNoField(canonical.enmu_rm),
+    enmu_area_estudo: cleanText(canonical.enmu_area_estudo),
     mapa_turismo_2022: cleanText(canonical.mapa_turismo_2022),
     mapa_turismo_2024: cleanText(canonical.mapa_turismo_2024),
     tipologia_pndu: cleanText(canonical.tipologia_pndu),
@@ -273,19 +304,6 @@ function normalizeRow(rawRow, fileInfo) {
   return row;
 }
 
-function deriveStatus(row) {
-  // O conteudo da resposta define o status. O canal de coleta (oficio) so
-  // decide quando nao ha informacao sobre o plano: municipios que responderam
-  // por outro canal (e-mail, por exemplo) contam como respondentes.
-  if (row.aprovado_lei === "Sim") return "Plano aprovado";
-  if (row.possui_plano_mobilidade === "Sim") return "Possui plano";
-  if (row.elaborando_plano === "Sim" || row.elaborando_plano === "Em revisão")
-    return "Em elaboração";
-  if (row.respondeu_ao_levantamento === "Não foi enviado ofício")
-    return "Sem ofício";
-  if (row.respondeu_ao_levantamento !== "Respondeu") return "Sem resposta";
-  return "Sem plano";
-}
 
 function summarize(rows) {
   const totalMunicipios = rows.length;

@@ -66,8 +66,11 @@ export function brazilCoverageMap(
   // ── SVG ────────────────────────────────────────────────────────────────────
   const svg = document.createElementNS(ns, "svg");
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
-  svg.setAttribute("role", "img");
-  svg.setAttribute("aria-label", "Mapa do Brasil por unidade da federação");
+  svg.setAttribute("role", "group");
+  svg.setAttribute(
+    "aria-label",
+    "Mapa do Brasil por unidade da federação. Use Tab para percorrer os estados e Enter para ver os municípios.",
+  );
   svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
 
   const g = document.createElementNS(ns, "g");
@@ -215,7 +218,17 @@ export function brazilCoverageMap(
     path.style.cursor = "pointer";
     path.dataset.codarea = codarea;
 
-    path.addEventListener("mousemove", (event) => {
+    // Acessível por teclado: cada UF é um botão com nome e resumo.
+    path.setAttribute("tabindex", "0");
+    path.setAttribute("role", "button");
+    path.setAttribute(
+      "aria-label",
+      data
+        ? `${data.estado_nome} (${data.uf}): ${formatNumber(data.municipios_com_plano_aprovado)} planos aprovados em ${formatNumber(data.total_obrigados)} municípios obrigados, ${formatPercent(data.percentual_aprovado)}. Enter para ver os municípios.`
+        : `${uf ?? codarea}: sem dados`,
+    );
+
+    function showStateTooltip(event) {
       if (selectedState) return;
       if (data) {
         tooltip.show(`${data.estado_nome} (${data.uf})`, [
@@ -228,12 +241,29 @@ export function brazilCoverageMap(
         tooltip.show(uf ?? codarea, []);
       }
       positionTooltip(tooltip.element, wrapper, event, TOOLTIP_HEIGHT_STATE);
-    });
+    }
 
+    path.addEventListener("mousemove", showStateTooltip);
     path.addEventListener("mouseleave", tooltip.hide);
+
+    // Foco por teclado: posiciona o tooltip no centro da UF.
+    path.addEventListener("focus", () => {
+      const box = path.getBoundingClientRect();
+      showStateTooltip({
+        clientX: box.left + box.width / 2,
+        clientY: box.top + box.height / 2,
+      });
+    });
+    path.addEventListener("blur", tooltip.hide);
 
     path.addEventListener("click", () => {
       handleStateClick(feature);
+    });
+    path.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        handleStateClick(feature);
+      }
     });
 
     statesLayer.append(path);

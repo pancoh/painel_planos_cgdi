@@ -96,6 +96,8 @@ export const COLUMN_ALIASES = new Map(
     ride_rm_au_ibge_2023: "recorte_metropolitano_secundario",
     ride_rm_au_ibge_2024: "recorte_metropolitano",
     enmu: "enmu",
+    rms_enmu: "enmu_rm",
+    area_de_estudo_enmu: "enmu_area_estudo",
     mapa_do_turismo_brasileiro_2022: "mapa_turismo_2022",
     mapa_do_turismo_brasileiro_2024: "mapa_turismo_2024",
     tipologia_pndu: "tipologia_pndu",
@@ -197,7 +199,10 @@ export function padIbge(value) {
   return digits.padStart(7, "0");
 }
 
-export function normalizeDate(value) {
+// referenceDate (AAAA-MM-DD) é a data do levantamento. Serve de desempate
+// para datas ambíguas (dd/mm x mm/dd) no lugar da data de execução, para que
+// o mesmo arquivo produza sempre o mesmo resultado.
+export function normalizeDate(value, referenceDate = null) {
   if (!value) return null;
   if (value instanceof Date && !Number.isNaN(value.getTime())) {
     return value.toISOString().slice(0, 10);
@@ -230,7 +235,9 @@ export function normalizeDate(value) {
     if (first > 12) return brazilian;
     if (second > 12) return us;
 
-    const reference = new Date();
+    const reference = referenceDate
+      ? new Date(`${referenceDate}T12:00:00Z`)
+      : new Date();
     const brazilianDate = new Date(`${brazilian}T12:00:00Z`);
     const usDate = new Date(`${us}T12:00:00Z`);
     const brazilianIsFuture = brazilianDate > reference;
@@ -303,4 +310,51 @@ export function classifyPopulationBand(value) {
   if (value >= 60_000) return "De 60 a 100 mil";
   if (value >= 20_000) return "De 20 a 60 mil";
   return "Até 20 mil";
+}
+
+// Valores (já normalizados por slugify) aceitos em cada campo de decisão.
+// Qualquer outro valor é reportado pelo pipeline como inesperado, porque cai
+// em uma categoria de status sem que ninguém perceba.
+export const EXPECTED_RAW_VALUES = {
+  respondeu_ao_levantamento: new Set(["sim", "nao", "nao_foi_enviado_oficio"]),
+  possui_plano_mobilidade: new Set([
+    "sim", "s", "nao", "nao_respondeu", "nao_foi_enviado_oficio",
+  ]),
+  aprovado_lei: new Set([
+    "sim", "s", "nao", "nao_possui_plano", "nao_respondeu", "nao_foi_enviado_oficio",
+  ]),
+  elaborando_plano: new Set([
+    "sim", "nao", "em_revisao", "nao_respondeu", "nao_foi_enviado_oficio",
+  ]),
+  obrigados_censo_2022_atualizado: new Set(["sim", "nao"]),
+  obrigados_censo_2022_atual: new Set(["sim", "nao"]),
+};
+
+// Acumula em `collector` (Map campo -> Map valor -> contagem) os valores
+// fora do esperado encontrados em uma linha canônica.
+export function collectUnexpectedValues(canonical, collector) {
+  for (const [field, expected] of Object.entries(EXPECTED_RAW_VALUES)) {
+    if (!(field in canonical)) continue;
+    const raw = canonical[field];
+    const key = slugify(raw);
+    if (!key || expected.has(key)) continue;
+    if (!collector.has(field)) collector.set(field, new Map());
+    const byValue = collector.get(field);
+    const label = String(raw).trim();
+    byValue.set(label, (byValue.get(label) ?? 0) + 1);
+  }
+}
+
+// Regra central do painel. O conteúdo da resposta define o status; o canal
+// de coleta (ofício) só decide quando não há informação sobre o plano.
+// A primeira condição verdadeira vence.
+export function deriveStatus(row) {
+  if (row.aprovado_lei === "Sim") return "Plano aprovado";
+  if (row.possui_plano_mobilidade === "Sim") return "Possui plano";
+  if (row.elaborando_plano === "Sim" || row.elaborando_plano === "Em revisão")
+    return "Em elaboração";
+  if (row.respondeu_ao_levantamento === "Não foi enviado ofício")
+    return "Sem ofício";
+  if (row.respondeu_ao_levantamento !== "Respondeu") return "Sem resposta";
+  return "Sem plano";
 }

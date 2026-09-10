@@ -161,6 +161,32 @@ if (invalidStatuses.size === 0) {
   err(`Valores inválidos em status_painel: ${[...invalidStatuses].join(", ")}`);
 }
 
+// ── 4b. Valores dos campos de decisão ─────────────────────────────────────
+console.log("\n[4b] Verificando valores dos campos de decisão...");
+const EXPECTED_DECISION_VALUES = {
+  respondeu_ao_levantamento: new Set(["Respondeu", "Não respondeu", "Não foi enviado ofício"]),
+  possui_plano_mobilidade: new Set(["Sim", "Não", "Não respondeu", "Não foi enviado ofício"]),
+  aprovado_lei: new Set(["Sim", "Não", "Não possui plano", "Não respondeu", "Não foi enviado ofício"]),
+  elaborando_plano: new Set(["Sim", "Não", "Em revisão", "Não respondeu", "Não foi enviado ofício"]),
+};
+let decisionErrors = 0;
+for (const [field, expected] of Object.entries(EXPECTED_DECISION_VALUES)) {
+  const invalid = new Map();
+  for (const row of municipios) {
+    const value = row[field];
+    if (value != null && !expected.has(value)) {
+      invalid.set(value, (invalid.get(value) ?? 0) + 1);
+    }
+  }
+  if (invalid.size > 0) {
+    err(`${field}: valores fora do esperado: ${[...invalid].map(([v, n]) => `"${v}" (${n})`).join(", ")}`);
+    decisionErrors++;
+  }
+}
+if (decisionErrors === 0) {
+  ok(`Campos de decisão só contêm valores previstos (${Object.keys(EXPECTED_DECISION_VALUES).length} campos)`);
+}
+
 // ── 5. Faixas populacionais ────────────────────────────────────────────────
 console.log("\n[5] Verificando porte_populacional...");
 const validPortes = new Set(PORTE_ORDER);

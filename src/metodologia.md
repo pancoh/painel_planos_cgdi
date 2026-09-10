@@ -58,12 +58,16 @@ Encerrados esses prazos, os municípios sem plano aprovado ficam sujeitos à res
 
 ## Classificação `status_painel`
 
-1. `Sem ofício`: quando `Respondeu ao levantamento` indica que não houve envio de ofício.
-2. `Sem resposta`: quando não há resposta válida ao levantamento.
-3. `Plano aprovado`: quando `Aprovado em lei ou ato normativo = Sim`.
-4. `Possui plano`: quando há plano, mas sem aprovação legal identificada.
-5. `Em elaboração`: quando `Elaborando plano = Sim` ou `Em revisão`.
+Cada município recebe um único status. As condições são avaliadas na ordem abaixo e a primeira verdadeira decide. O conteúdo da resposta tem precedência sobre o canal de coleta: um município que informou plano aprovado por outro meio, sem ofício, conta como `Plano aprovado`.
+
+1. `Plano aprovado`: quando `Aprovado em lei ou ato normativo = Sim`.
+2. `Possui plano`: quando `Possui plano de mobilidade urbana = Sim`, sem aprovação legal identificada.
+3. `Em elaboração`: quando `Elaborando plano = Sim` ou `Em revisão`.
+4. `Sem ofício`: quando `Respondeu ao levantamento` indica que não houve envio de ofício.
+5. `Sem resposta`: quando não há resposta válida ao levantamento.
 6. `Sem plano`: demais situações respondidas sem plano identificado.
+
+Os indicadores percentuais consideram apenas os municípios obrigados. Textos usados na planilha como preenchimento nas colunas de instrumento legal, número e data da lei (por exemplo `Não possui plano`) são tratados como vazio.
 
 ## Arquivos derivados
 

@@ -302,11 +302,9 @@ Faixas usadas no cálculo (`classifyPopulationBand`, linha 223): até 20 mil, de
 
 ## 9. Divergências identificadas
 
-### 9.1. `src/metodologia.md` está desatualizado
+### 9.1. `src/metodologia.md` (resolvido em set/2026)
 
-A seção "Classificação `status_painel`" da página de metodologia descreve a ordem
-antiga, com `Sem ofício` em primeiro lugar. Precisa ser corrigida para refletir a
-regra atual.
+A página de metodologia foi alinhada à ordem atual de `deriveStatus`.
 
 ### 9.2. Contradição no dado de origem
 
@@ -328,8 +326,8 @@ Nove municípios têm status `Sem ofício` mas trazem número de ofício preench
 Nos nove casos, as colunas de plano dizem `Não foi enviado ofício`. É inconsistência
 na planilha, não no código. Vale confirmar qual informação está correta.
 
-### 9.3. Ausência de teste
+### 9.3. Teste de `deriveStatus` (resolvido em set/2026)
 
-Não há teste automatizado cobrindo `deriveStatus`, apesar de ser a regra central do
-painel. A suíte atual (`test/`) cobre parsing de datas, agregação por UF e o
-pipeline de arquivos, mas não a classificação de status.
+`deriveStatus` foi movida para `scripts/process-data-utils.mjs` e é coberta por
+`test/derive-status.test.mjs` (seis categorias e precedência do conteúdo sobre o
+canal).

@@ -5,6 +5,7 @@ import {
   cleanPlaceholder,
   mapHeaders,
   findMissingRequiredFields,
+  collectUnexpectedValues,
 } from "../scripts/process-data-utils.mjs";
 
 test("normalizeDate mantém ISO", () => {
@@ -65,4 +66,22 @@ test("findMissingRequiredFields aponta campos essenciais ausentes", () => {
   const missing = findMissingRequiredFields(new Set(["codigo_ibge", "uf", "municipio"]));
   assert.ok(missing.includes("aprovado_lei"));
   assert.ok(missing.some((m) => m.includes("obrigados_censo_2022")));
+});
+
+test("normalizeDate desempata datas ambíguas pela data de referência, não por hoje", () => {
+  // 3/4 pode ser 3 de abril (BR) ou 4 de março (US). Com referência em
+  // 20/03/2025, a leitura brasileira cai no futuro e a americana vence.
+  assert.equal(normalizeDate("3/4/2025", "2025-03-20"), "2025-03-04");
+  // Com referência posterior, as duas são passadas e a brasileira vence.
+  assert.equal(normalizeDate("3/4/2025", "2025-06-01"), "2025-04-03");
+});
+
+test("collectUnexpectedValues registra valores fora do esperado com contagem", () => {
+  const collector = new Map();
+  collectUnexpectedValues({aprovado_lei: "Sim", respondeu_ao_levantamento: "Sim"}, collector);
+  assert.equal(collector.size, 0);
+  collectUnexpectedValues({aprovado_lei: "Ssim", respondeu_ao_levantamento: "Talvez"}, collector);
+  collectUnexpectedValues({aprovado_lei: "Ssim"}, collector);
+  assert.equal(collector.get("aprovado_lei").get("Ssim"), 2);
+  assert.equal(collector.get("respondeu_ao_levantamento").get("Talvez"), 1);
 });

@@ -250,8 +250,8 @@ entrada em `COLUMN_ALIASES` e são descartadas em silêncio.
 | 3 | UF | Sim | `uf` | Agregação e particionamento |
 | 4 | Município | Sim | `municipio` | Exibição e busca |
 | 5 | RIDE RM AU - IBGE 2024 | Sim | `recorte_metropolitano` | Exportado no CSV, não exibido |
-| 6 | RMs ENMU | Não | (ignorada) | |
-| 7 | Área de Estudo ENMU | Não | (ignorada) | |
+| 6 | RMs ENMU | Sim | `enmu_rm` | Exportado no CSV, não exibido |
+| 7 | Área de Estudo ENMU | Sim | `enmu_area_estudo` | Exportado no CSV, não exibido |
 | 8 | Mapa do Turismo Brasileiro 2022 | Sim | `mapa_turismo_2022` | Exportado no CSV, não exibido |
 | 9 | Mapa do Turismo Brasileiro 2024 | Sim | `mapa_turismo_2024` | Exportado no CSV, não exibido |
 | 10 | Tipologia PNDU | Sim | `tipologia_pndu` | Exportado no CSV, não exibido |
@@ -301,7 +301,8 @@ vários cabeçalhos para o mesmo campo interno.
 | `obrigados_censo_2022_atual` | `obrigados_censo_2022` (arquivos a partir de 03/set/2026) |
 | `recorte_metropolitano` | `ride_rm_au_ibge_2021`, `ride_rm_au_ibge_2024` |
 | `recorte_metropolitano_secundario` | `ride_rm_au_ibge_2023` (mapeado, mas não emitido na saída) |
-| `enmu` | `enmu` (coluna deixou de existir em mar/2026; ver 12.2) |
+| `enmu` | `enmu` (coluna única, existiu de out/2025 a fev/2026) |
+| `enmu_rm`, `enmu_area_estudo` | `rms_enmu`, `area_de_estudo_enmu` (a partir de mar/2026) |
 
 A normalização de cabeçalho (`normalizeHeader`) remove acentos, converte para
 minúsculas e troca qualquer sequência de caracteres não alfanuméricos por `_`.
@@ -362,6 +363,7 @@ anterior (por isso ele está versionado).
 |---|---|---|---|
 | Malhas do IBGE (estados e municípios, TopoJSON convertido em GeoJSON) | `scripts/download-geo.mjs` | `src/geo/estados.json`, `src/geo/municipios-<código UF>.json` | Faz parte de `npm run data`; pula arquivos já existentes |
 | Bandeiras das UFs (Atlas Escolar IBGE) | `scripts/download-flags.mjs` | `src/assets/flags/<uf>.png` | Execução manual: `node scripts/download-flags.mjs` |
+| Fontes IBM Plex (Google Fonts) | `scripts/build-fonts.mjs` | `src/fonts.css` (base64) | Execução manual, só ao mudar família ou pesos |
 
 Os dois conjuntos estão versionados. O download só é necessário se algum arquivo
 for apagado.
@@ -422,7 +424,9 @@ A mensagem de erro aponta para a seção 10.2 deste documento.
    formas com decimais. Retorna `null` se não conseguir converter.
 4. **Datas:** `normalizeDate` converte para `AAAA-MM-DD`. Aceita `Date`, ISO,
    `dd/mm/aaaa`, `mm/dd/aaaa` e mês abreviado em inglês ou português
-   (`18-May-23`, `5/ago/2021`). Quando dia e mês são ambos até 12, a regra é:
+   (`18-May-23`, `5/ago/2021`). Quando dia e mês são ambos até 12, o desempate
+   usa a **data de referência do arquivo** (a leitura que cairia depois do
+   levantamento perde), para que o reprocessamento seja sempre igual. Quando dia e mês são ambos até 12, a regra é:
    ano com dois dígitos assume formato americano; se uma leitura cair no futuro
    e a outra não, vence a que não é futura; no empate, vence a brasileira.
 5. **Sim/Não:** `classifyYesNoField` padroniza para `Sim`, `Não`,
@@ -445,6 +449,11 @@ A mensagem de erro aponta para a seção 10.2 deste documento.
 12. **Ano da estimativa:** `inferEstimateYear` olha os cabeçalhos da linha e
     registra 2026, 2025 ou 2024 conforme a coluna `Estimativa populacional <ano>`
     presente.
+13. **Valores inesperados:** `collectUnexpectedValues` compara os campos de
+    decisão (respondeu, possui plano, aprovado, elaborando, obrigatoriedade)
+    com a lista `EXPECTED_RAW_VALUES`. Ao fim de cada arquivo o pipeline
+    imprime um aviso com os valores fora da lista e suas contagens. O
+    `check-data.mjs` transforma isso em erro se chegar ao snapshot vigente.
 
 ### 5.5 Campos derivados
 
@@ -475,7 +484,8 @@ Faixas válidas: `Até 20 mil`, `De 20 a 60 mil`, `De 60 a 100 mil`,
 
 **`status_painel`** (texto, seis categorias)
 
-Função `deriveStatus`. A primeira condição verdadeira decide:
+Função `deriveStatus`, em `scripts/process-data-utils.mjs` (testada em
+`test/derive-status.test.mjs`). A primeira condição verdadeira decide:
 
 | Ordem | Condição | Status |
 |---|---|---|
@@ -627,9 +637,11 @@ Estrutura de cada linha em `latest-municipios.csv`, `municipios-uf-*.json` e
 | `instrumento_resposta` | texto | Repondido por qual instrumento | não usado |
 | `obrigados_estimativa` | texto padronizado | Obrigados Estimativa <ano> | não usado |
 | `obrigados_censo_2022_antigo` | texto padronizado | Obrigados Censo 2022 - antigo | não usado |
-| `obrigados_censo_2022_atualizado` | texto padronizado | Obrigados Censo 2022 - atualizado | não usado (vazio no snapshot atual; ver 12.3) |
+| `obrigados_censo_2022_atualizado` | texto padronizado | Obrigados Censo 2022 - atualizado, ou Obrigados Censo 2022 (consolidado) | não usado |
 | `recorte_metropolitano` | texto | RIDE RM AU - IBGE 2024 (ou 2021) | não usado |
-| `enmu` | texto | ENMU (coluna extinta) | não usado (vazio desde mar/2026) |
+| `enmu` | texto | ENMU (coluna única, out/2025 a fev/2026) | não usado |
+| `enmu_rm` | texto padronizado | RMs ENMU (a partir de mar/2026) | não usado |
+| `enmu_area_estudo` | texto | Área de Estudo ENMU (a partir de mar/2026) | não usado |
 | `mapa_turismo_2022` | texto | Mapa do Turismo Brasileiro 2022 | não usado |
 | `mapa_turismo_2024` | texto | Mapa do Turismo Brasileiro 2024 | não usado |
 | `tipologia_pndu` | texto | Tipologia PNDU | não usado |
@@ -719,7 +731,7 @@ Carrega `metadata.json`, `latest-regioes.json`, `latest-ufs.json`,
 | Cartão "Percentual aprovado" | `latest_summary` | `percentual_aprovado` |
 | Barra "Obrigados e planos aprovados" | `approval_by_population` | Duas barras (acima e até 250 mil) com `aprovados` e `sem_plano`; rodapé com `total` e `pct` |
 | "Cobertura por região" | `latest-regioes.json` | Ordena por `percentual_aprovado` decrescente; barra proporcional ao maior valor; mostra `municipios_com_plano_aprovado` e `total_obrigados` |
-| Mapa por UF | `latest-ufs.json` + `geo/estados.json` | Cor da UF em escala linear de `municipios_com_plano_aprovado` (0 até o máximo entre as UFs). Tooltip: obrigados, aprovados, sem plano aprovado (`total_obrigados - municipios_com_plano_aprovado`), percentual |
+| Mapa por UF | `latest-ufs.json` + `geo/estados.json` | Cor da UF em escala linear de `municipios_com_plano_aprovado` (0 até o máximo entre as UFs). Tooltip: obrigados, aprovados, sem plano aprovado (`total_obrigados - municipios_com_plano_aprovado`), percentual. Cada UF é focável por teclado (Tab), tem nome acessível com o resumo e abre com Enter ou Espaço |
 | Mapa municipal (ao clicar em uma UF) | `municipios-uf-<uf>.json` + `geo/municipios-<código>.json` | Cruzamento por `codigo_ibge`. Verde = `status_painel == "Plano aprovado"`; vermelho = `obrigado` com outro status; cinza = não obrigado ou sem dado. Tooltip: nome, obrigatoriedade, status |
 | Gráfico "Evolução acumulada" | `evolucao-aprovados.json` | Áreas empilhadas por ano; azul = acima de 250 mil, verde = até 250 mil. Tooltip mostra os dois grupos e o total acumulado |
 | Notas de rodapé | fixas no `.md` | Texto institucional |
@@ -822,7 +834,7 @@ acessível pela URL direta.
 - `display(...)` insere um elemento DOM na página. `${...}` dentro do Markdown
   interpola valores.
 - `observablehq.config.js` define menu, cabeçalho, rodapé e a inclusão de
-  `theme.css` e das fontes IBM Plex (Google Fonts).
+  `theme.css` e `fonts.css`.
 - Não há rotas dinâmicas. Cada página por estado é um arquivo separado.
 
 ### 9.2 Componentes (`src/components/`)
@@ -856,6 +868,13 @@ Todo o estilo está em `src/theme.css` (cerca de 2.100 linhas). Tokens em
 `:root` (cores, fontes, espaçamentos). Breakpoints em 1100px e 720px. O bloco
 `#observablehq-header` sobrescreve o cabeçalho padrão do framework com
 `!important`; ao atualizar a versão do Observable Framework, confira esse trecho.
+
+**Fontes.** IBM Plex Sans e IBM Plex Serif ficam em `src/fonts.css`, embutidas
+em base64 (subconjunto latin, 276 KB), sem chamada ao Google Fonts. O arquivo é
+gerado por `node scripts/build-fonts.mjs` e não deve ser editado à mão. O
+framework não copia arquivos citados em `url()` de CSS, por isso as fontes vão
+embutidas em vez de arquivos `.woff2` separados. Para trocar família ou pesos,
+edite `FAMILIES` no script e rode-o de novo.
 
 ---
 
@@ -971,26 +990,26 @@ Para publicar em outro servidor estático, basta copiar `dist/`.
 
 ### 11.1 `npm test`
 
-Vinte e um testes com o runner nativo do Node (`node --test test/*.test.mjs`):
+Trinta e um testes com o runner nativo do Node (`node --test test/*.test.mjs`):
 
 | Arquivo | Cobre |
 |---|---|
-| `process-data-utils.test.mjs` | `normalizeDate` (ISO, brasileiro, americano, ano curto, mês abreviado), `cleanPlaceholder`, `mapHeaders`, `findMissingRequiredFields` |
+| `process-data-utils.test.mjs` | `normalizeDate` (ISO, brasileiro, americano, ano curto, mês abreviado, desempate pela data de referência), `cleanPlaceholder`, `mapHeaders`, `findMissingRequiredFields`, `collectUnexpectedValues` |
+| `derive-status.test.mjs` | As seis categorias de `deriveStatus` e a precedência do conteúdo sobre o canal |
 | `column-aliases.test.mjs` | Lê o cabeçalho de **todos os XLSX do repositório** e confirma que os campos essenciais têm alias. É a defesa contra coluna renomeada; roda no CI |
-| `process-historical-data.integration.test.mjs` | Roda o pipeline inteiro em pasta temporária: ignora arquivo fora do padrão, soma das categorias bate com obrigados, gera CSV e partição por UF, falha sem coluna essencial, anula textos de preenchimento |
+| `process-historical-data.integration.test.mjs` | Roda o pipeline inteiro em pasta temporária: ignora arquivo fora do padrão, soma das categorias bate com obrigados, gera CSV e partição por UF, falha sem coluna essencial, anula textos de preenchimento, avisa valores inesperados e consolida a coluna de obrigatoriedade |
 | `municipios-data.test.mjs` | `parseMunicipiosCsv` (booleanos, código IBGE com zeros, nulos) |
 | `municipio-explorer.test.mjs` | Cabeçalho e formato do CSV exportado |
 | `navigation.test.mjs` | Item ativo do menu |
 
-Não existe teste direto de `deriveStatus`. Ao mexer na regra de status, escreva
-um.
+Ao mexer na regra de status, atualize `derive-status.test.mjs` junto.
 
 ### 11.2 `npm run check-data`
 
 Verifica: presença dos artefatos, contagem de snapshots, colunas obrigatórias,
 número de municípios entre 5.400 e 5.700, categorias de status válidas, faixas
-de porte válidas, 27 UFs presentes, soma das categorias igual a
-`total_obrigados` por UF, pisos absolutos do resumo nacional (mínimo de 1.500
+de porte válidas, valores dos quatro campos de decisão dentro do previsto, 27
+UFs presentes, soma das categorias igual a `total_obrigados` por UF, pisos absolutos do resumo nacional (mínimo de 1.500
 obrigados e 200 aprovados), queda máxima em relação ao snapshot anterior (5%
 em obrigados, 10% em aprovados) e 27 arquivos por UF. Retorna código 1 em erro,
 o que interrompe `npm run build`. Os limites estão em `THRESHOLDS` no início do
@@ -1013,26 +1032,24 @@ teste `column-aliases.test.mjs` confere os cabeçalhos de todos os XLSX no CI.
 Colunas secundárias (por exemplo `ENMU`) continuam gerando apenas aviso no
 console; siga o passo 5 de 10.1 para essas.
 
-### 12.2 Campo `enmu` vazio desde março de 2026
+### 12.2 Campos de ENMU mudaram de forma ao longo do histórico
 
-A coluna `ENMU` foi substituída por `RMs ENMU` e `Área de Estudo ENMU`, que não
-têm alias. O campo sai vazio no CSV. Como não é exibido, ninguém notou. Se a
-informação for necessária, crie aliases e campos novos (procedimento 10.2,
-passo 4).
+`enmu` só existe nos snapshots de out/2025 a fev/2026 (coluna única). A partir
+de mar/2026 a informação vem em `enmu_rm` e `enmu_area_estudo`. Quem usar o
+histórico precisa tratar os dois formatos.
 
-### 12.3 Campo `obrigados_censo_2022_atualizado` vazio no snapshot atual
+### 12.3 Coluna de obrigatoriedade consolidada
 
-A partir de 03/set/2026 a coluna se chama `Obrigados Censo 2022` e vai para o
-campo interno `obrigados_censo_2022_atual`, que **não é emitido** na linha de
-saída. O cálculo de `obrigado` está correto, mas quem baixar o CSV público verá
-a coluna `obrigados_censo_2022_atualizado` vazia. Correção sugerida: emitir um
-único campo consolidado em `normalizeRow`.
+A partir de 03/set/2026 a planilha chama a coluna de `Obrigados Censo 2022`
+(antes `Obrigados Censo 2022 - atualizado`). O campo exportado
+`obrigados_censo_2022_atualizado` recebe o valor de qualquer uma das duas, então
+o CSV público mantém o mesmo nome de coluna em todo o histórico.
 
-### 12.4 `src/metodologia.md` descreve a ordem antiga de status
+### 12.4 Metodologia pública precisa acompanhar `deriveStatus`
 
-A seção "Classificação `status_painel`" da página pública lista `Sem ofício` e
-`Sem resposta` antes de `Plano aprovado`. Desde agosto de 2026 a ordem em vigor
-é a da seção 5.5 deste documento. A página precisa ser atualizada.
+A seção "Classificação `status_painel`" de `src/metodologia.md` foi alinhada à
+ordem atual em set/2026. Toda mudança em `deriveStatus` exige atualizar essa
+página, `regras-de-status.md` e `derive-status.test.mjs`.
 
 ### 12.5 As planilhas fazem parte do repositório
 
@@ -1040,18 +1057,17 @@ Se a política institucional exigir removê-las do git, o workflow de deploy
 deixa de funcionar sem outra fonte para os arquivos (por exemplo, um bucket
 privado baixado no início do build).
 
-### 12.6 Valores fora do esperado passam sem aviso
+### 12.6 Valores fora do esperado geram aviso, não correção
 
-Um erro de digitação como `Ssim` em "Aprovado em lei" não gera alerta; o
-município cai em outra categoria. `classifyResponseField` converte valores
-desconhecidos em `null`, que vira `Sem resposta`. Vale conferir os valores
-distintos (3.1.3) a cada novo arquivo.
+Um erro de digitação como `Ssim` em "Aprovado em lei" aparece no console do
+pipeline (aviso por arquivo) e derruba o `check-data` se estiver no snapshot
+vigente. A correção é sempre na planilha, nunca no código: o município continua
+classificado pela regra normal até o dado ser corrigido.
 
-### 12.7 Datas ambíguas dependem da data de execução
+### 12.7 Datas ambíguas usam a data de referência do arquivo
 
-`normalizeDate` usa "cair no futuro" como desempate entre dd/mm e mm/dd. O
-mesmo arquivo pode produzir datas diferentes se reprocessado anos depois. Afeta
-só `data_da_lei` e `data_resposta`, que são exibidas mas não entram em cálculo.
+O desempate entre dd/mm e mm/dd compara com a data do levantamento (nome do
+arquivo), não com a data de execução. O reprocessamento é determinístico.
 
 ### 12.8 Listas duplicadas que precisam ficar sincronizadas
 
@@ -1112,5 +1128,6 @@ npm test                    # testes
 npm run lint                # ESLint
 npm run clean               # remove dist/ e cache do Observable
 node scripts/download-flags.mjs   # bandeiras (manual)
+node scripts/build-fonts.mjs      # regenera src/fonts.css (manual)
 node compare_columns.mjs          # comparar cabeçalhos de dois XLSX (editar nomes no script)
 ```
