@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import * as nodeFs from "node:fs";
 import xlsx from "xlsx";
 import { csvEscape } from "../src/lib/formatters.js";
 import { STATUS_CATEGORIES, LEGAL_DEADLINES, POP_THRESHOLD } from "../src/lib/constants.js";
@@ -12,7 +13,10 @@ import {
   normalizeHeader,
   slugify,
   cleanText,
+  cleanPlaceholder,
   toNumber,
+  mapHeaders,
+  findMissingRequiredFields,
   padIbge,
   normalizeDate,
   classifyYesNoField,
@@ -22,6 +26,9 @@ import {
   inferEstimateYear,
   classifyPopulationBand,
 } from "./process-data-utils.mjs";
+
+// A distribuição ES do SheetJS não carrega o fs sozinha; sem isto readFile falha.
+xlsx.set_fs(nodeFs);
 
 const ROOT = process.cwd();
 const INPUT_DIR = path.join(
@@ -72,6 +79,7 @@ async function main() {
       defval: null,
       raw: false,
     });
+    validateHeaders(fileInfo.file, Object.keys(rawRows[0] ?? {}));
     const rows = rawRows.map((row) => normalizeRow(row, fileInfo));
     historyRows.push(...rows);
     snapshots.push({
@@ -143,6 +151,25 @@ async function collectInputFiles() {
   return files;
 }
 
+// Falha cedo quando um cabeçalho essencial não tem alias em COLUMN_ALIASES.
+// Sem isso, a coluna é descartada em silêncio e o painel publica zeros.
+function validateHeaders(fileName, headers) {
+  const { mapped, unmapped } = mapHeaders(headers);
+  if (unmapped.length > 0) {
+    console.warn(
+      `Aviso: ${fileName}: colunas sem alias, ignoradas: ${unmapped.join(" | ")}`,
+    );
+  }
+  const missing = findMissingRequiredFields(mapped);
+  if (missing.length > 0) {
+    throw new Error(
+      `${fileName}: campos obrigatórios sem coluna correspondente: ${missing.join(", ")}. ` +
+        "Compare os cabeçalhos com o arquivo anterior e adicione o alias em " +
+        "scripts/process-data-utils.mjs (COLUMN_ALIASES). Ver MANUTENCAO.md, seção 10.2.",
+    );
+  }
+}
+
 function parseReferenceDate(fileName) {
   const match = fileName.match(/_(\d{1,2})([a-z]{3})(\d{4})\.xlsx$/i);
   if (!match) return null;
@@ -208,9 +235,9 @@ function normalizeRow(rawRow, fileInfo) {
     possui_plano_mobilidade: possuiPlano,
     aprovado_lei: aprovado,
     elaborando_plano: elaborando,
-    instrumento_legal: cleanText(canonical.instrumento_legal),
-    numero_da_lei: cleanText(canonical.numero_da_lei),
-    data_da_lei: normalizeDate(canonical.data_da_lei),
+    instrumento_legal: cleanPlaceholder(canonical.instrumento_legal),
+    numero_da_lei: cleanPlaceholder(canonical.numero_da_lei),
+    data_da_lei: normalizeDate(cleanPlaceholder(canonical.data_da_lei)),
     ano_elaboracao: toNumber(canonical.ano_elaboracao),
     oficio: cleanText(canonical.oficio),
     data_resposta: normalizeDate(canonical.data_resposta),

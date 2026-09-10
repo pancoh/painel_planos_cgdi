@@ -5,7 +5,10 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import {existsSync} from "node:fs";
 import {spawn} from "node:child_process";
+import * as nodeFs from "node:fs";
 import xlsx from "xlsx";
+
+xlsx.set_fs(nodeFs);
 
 const SCRIPT_PATH = path.resolve("scripts/process-historical-data.mjs");
 
@@ -186,6 +189,92 @@ test("gera particionamento por UF e CSV mais recente", async () => {
 
   const csv = await fs.readFile(csvPath, "utf8");
   assert.match(csv, /S[ãa]o Paulo/);
+});
+
+test("pipeline falha quando um XLSX nao tem coluna essencial", async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), "cgdi-pipeline-"));
+  await prepareInputDir(tempRoot);
+
+  await writeWorkbook(
+    path.join(
+      tempRoot,
+      "Arquivos_Levantamento_PlanosdeMobilidadeUrbana",
+      "Levantamento_PlanosdeMobilidadeUrbana_01jan2026.xlsx",
+    ),
+    [
+      {
+        "Código IBGE": "3550308",
+        "Região": "SE",
+        "UF": "SP",
+        "Município": "São Paulo",
+        "Aprovado em lei ou ato normativo": "Sim",
+        "Obrigados Censo 2022 - renomeado": "Sim",
+      },
+    ],
+  );
+
+  const result = await runScript(tempRoot);
+  assert.notEqual(result.code, 0);
+  assert.match(result.stderr, /obrigados_censo_2022/);
+});
+
+test("pipeline anula textos de preenchimento nas colunas de lei", async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), "cgdi-pipeline-"));
+  await prepareInputDir(tempRoot);
+
+  await writeWorkbook(
+    path.join(
+      tempRoot,
+      "Arquivos_Levantamento_PlanosdeMobilidadeUrbana",
+      "Levantamento_PlanosdeMobilidadeUrbana_01jan2026.xlsx",
+    ),
+    [
+      {
+        "Código IBGE": "3550308",
+        "Região": "SE",
+        "UF": "SP",
+        "Município": "São Paulo",
+        "Respondeu ao levantamento": "Sim",
+        "Possui Plano de Mobilidade Urbana": "Sim",
+        "Aprovado em lei ou ato normativo": "Sim",
+        "Instrumento Legal": "Decreto Municipal",
+        "Nº da Lei": "56.834/2016",
+        "Data da Lei": "18-May-23",
+        "Obrigados Censo 2022": "Sim",
+      },
+      {
+        "Código IBGE": "3509502",
+        "Região": "SE",
+        "UF": "SP",
+        "Município": "Campinas",
+        "Respondeu ao levantamento": "Sim",
+        "Possui Plano de Mobilidade Urbana": "Nao",
+        "Aprovado em lei ou ato normativo": "Nao possui plano",
+        "Instrumento Legal": "Nao possui plano",
+        "Nº da Lei": "Nao possui plano",
+        "Data da Lei": "Nao possui plano",
+        "Obrigados Censo 2022": "Sim",
+      },
+    ],
+  );
+
+  const result = await runScript(tempRoot);
+  assert.equal(result.code, 0, result.stderr);
+
+  const rows = JSON.parse(
+    await fs.readFile(
+      path.join(tempRoot, "src", "data", "processed", "municipios-uf-sp.json"),
+      "utf8",
+    ),
+  );
+  const sp = rows.find((r) => r.codigo_ibge === "3550308");
+  const campinas = rows.find((r) => r.codigo_ibge === "3509502");
+  assert.equal(sp.data_da_lei, "2023-05-18");
+  assert.equal(sp.instrumento_legal, "Decreto Municipal");
+  assert.equal(campinas.instrumento_legal, null);
+  assert.equal(campinas.numero_da_lei, null);
+  assert.equal(campinas.data_da_lei, null);
+  assert.equal(campinas.status_painel, "Sem plano");
 });
 
 async function prepareInputDir(root) {

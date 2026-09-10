@@ -13,6 +13,11 @@ export const MONTHS = {
   dez: 12,
 };
 
+const EN_MONTHS = {
+  jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6,
+  jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12,
+};
+
 export const REGION_ORDER = ["Norte", "Nordeste", "Centro-Oeste", "Sudeste", "Sul"];
 export const REGION_LABELS = {
   N: "Norte",
@@ -97,6 +102,39 @@ export const COLUMN_ALIASES = new Map(
   }),
 );
 
+// Campos internos que precisam existir em todo arquivo de levantamento. Se um
+// deles ficar sem alias (cabeçalho renomeado na planilha), o pipeline falha em
+// vez de publicar indicadores zerados.
+export const REQUIRED_CANONICAL_FIELDS = [
+  "codigo_ibge",
+  "uf",
+  "municipio",
+  "aprovado_lei",
+];
+export const OBLIGATION_FIELDS = [
+  "obrigados_censo_2022_atualizado",
+  "obrigados_censo_2022_atual",
+];
+
+export function mapHeaders(headers) {
+  const mapped = new Set();
+  const unmapped = [];
+  for (const header of headers) {
+    const alias = COLUMN_ALIASES.get(normalizeHeader(header));
+    if (alias) mapped.add(alias);
+    else unmapped.push(header);
+  }
+  return { mapped, unmapped };
+}
+
+export function findMissingRequiredFields(mappedFields) {
+  const missing = REQUIRED_CANONICAL_FIELDS.filter((f) => !mappedFields.has(f));
+  if (!OBLIGATION_FIELDS.some((f) => mappedFields.has(f))) {
+    missing.push(OBLIGATION_FIELDS.join(" ou "));
+  }
+  return missing;
+}
+
 export function normalizeHeader(header) {
   return slugify(String(header ?? ""));
 }
@@ -114,6 +152,22 @@ export function cleanText(value) {
   if (value == null) return null;
   const text = String(value).trim();
   return text === "" ? null : text;
+}
+
+// Valores que a planilha usa como texto de preenchimento em colunas de lei
+// (Instrumento Legal, Nº da Lei, Data da Lei). Não são dados; viram null.
+const PLACEHOLDER_KEYS = new Set([
+  "nao",
+  "nao_possui_plano",
+  "nao_respondeu",
+  "nao_foi_enviado_oficio",
+  "nao_aprovado_em_lei",
+]);
+
+export function cleanPlaceholder(value) {
+  const key = slugify(value);
+  if (!key || PLACEHOLDER_KEYS.has(key)) return null;
+  return cleanText(value);
 }
 
 export function toNumber(value) {
@@ -150,6 +204,18 @@ export function normalizeDate(value) {
   }
   const text = String(value).trim();
   if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return text;
+
+  // Formato com mês abreviado, em inglês ou português: 18-May-23, 1/ago/2021
+  const monthNameMatch = text.match(/^(\d{1,2})[-/ ]([A-Za-z]{3})[-/ ](\d{2,4})$/);
+  if (monthNameMatch) {
+    const [, dayRaw, monthRaw, yearRaw] = monthNameMatch;
+    const monthKey = monthRaw.toLowerCase();
+    const month = EN_MONTHS[monthKey] ?? MONTHS[monthKey];
+    if (month) {
+      const year = yearRaw.length === 2 ? `20${yearRaw}` : yearRaw;
+      return makeIsoDate(year, month, Number(dayRaw));
+    }
+  }
 
   const slashMatch = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
   if (slashMatch) {

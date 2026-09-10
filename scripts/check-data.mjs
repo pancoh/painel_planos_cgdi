@@ -16,6 +16,13 @@ const THRESHOLDS = {
   maxMunicipios: 5700,       // máximo esperado
   minSnapshotRows: 5000,     // mínimo de municipality_count por snapshot
   maxNullPopulation: 50,     // acima disso vira erro (não apenas aviso)
+  // Pisos absolutos do resumo nacional. Zero passa em todas as checagens
+  // relativas (soma bate com total), então é preciso um mínimo fixo.
+  minObrigados: 1500,        // hoje ~1.910
+  minAprovados: 200,         // hoje ~400
+  // Queda máxima tolerada em relação ao snapshot anterior
+  maxDropObrigados: 0.05,
+  maxDropAprovados: 0.10,
 };
 
 const EXPECTED_COLUMNS = [
@@ -227,6 +234,41 @@ for (const uf of ufs) {
 }
 if (aggregateErrors === 0) {
   ok(`Agregados por UF íntegros (${ufs.length} UFs verificadas)`);
+}
+
+// ── 7b. Pisos absolutos e comparação com o snapshot anterior ─────────────
+console.log("\n[7b] Verificando resumo nacional contra pisos e snapshot anterior...");
+const latest = metadata.latest_summary ?? {};
+const previous = metadata.previous_summary;
+if ((latest.total_obrigados ?? 0) < THRESHOLDS.minObrigados) {
+  err(`total_obrigados=${latest.total_obrigados} abaixo do piso (${THRESHOLDS.minObrigados}). Provável coluna de obrigatoriedade sem alias.`);
+} else {
+  ok(`total_obrigados=${latest.total_obrigados} (piso ${THRESHOLDS.minObrigados})`);
+}
+if ((latest.municipios_com_plano_aprovado ?? 0) < THRESHOLDS.minAprovados) {
+  err(`municipios_com_plano_aprovado=${latest.municipios_com_plano_aprovado} abaixo do piso (${THRESHOLDS.minAprovados}). Provável coluna "Aprovado em lei" sem alias.`);
+} else {
+  ok(`municipios_com_plano_aprovado=${latest.municipios_com_plano_aprovado} (piso ${THRESHOLDS.minAprovados})`);
+}
+if (previous) {
+  const drop = (field) =>
+    previous[field] > 0 ? (previous[field] - latest[field]) / previous[field] : 0;
+  const dropObrigados = drop("total_obrigados");
+  const dropAprovados = drop("municipios_com_plano_aprovado");
+  let dropErrors = 0;
+  if (dropObrigados > THRESHOLDS.maxDropObrigados) {
+    err(`total_obrigados caiu ${(dropObrigados * 100).toFixed(1)}% em relação ao snapshot anterior (${previous.total_obrigados} → ${latest.total_obrigados})`);
+    dropErrors++;
+  }
+  if (dropAprovados > THRESHOLDS.maxDropAprovados) {
+    err(`municipios_com_plano_aprovado caiu ${(dropAprovados * 100).toFixed(1)}% em relação ao snapshot anterior (${previous.municipios_com_plano_aprovado} → ${latest.municipios_com_plano_aprovado})`);
+    dropErrors++;
+  }
+  if (dropErrors === 0) {
+    ok(`Variação em relação ao snapshot anterior dentro do tolerado (obrigados ${previous.total_obrigados} → ${latest.total_obrigados}; aprovados ${previous.municipios_com_plano_aprovado} → ${latest.municipios_com_plano_aprovado})`);
+  }
+} else {
+  warn("Sem snapshot anterior para comparação");
 }
 
 // ── 8. Arquivos particionados por UF ──────────────────────────────────────
